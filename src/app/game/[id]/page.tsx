@@ -45,7 +45,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
 
   useEffect(() => {
     const userId = localStorage.getItem('gartic_userId');
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL!;
     const socket = io(socketUrl);
     socketRef.current = socket;
 
