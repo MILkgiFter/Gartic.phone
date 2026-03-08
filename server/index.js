@@ -29,7 +29,7 @@ app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*', // For development. Change to your Vercel URL in production for better security.
+    origin: process.env.CLIENT_URL || '*', // We'll set this to the Vercel URL later
     methods: ['GET', 'POST'],
   },
 });
