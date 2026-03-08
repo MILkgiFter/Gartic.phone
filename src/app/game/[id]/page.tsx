@@ -40,6 +40,8 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
   const [tool, setTool] = useState<'brush' | 'eraser' | 'fill'>('brush');
   const [winner, setWinner] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
+  const [isPlayersVisible, setIsPlayersVisible] = useState(false);
+  const [isChatVisible, setIsChatVisible] = useState(false);
 
   useEffect(() => {
     const userId = localStorage.getItem('gartic_userId');
@@ -128,6 +130,29 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
+      {/* Mobile Nav Toggles */}
+      <div className="lg:hidden absolute top-2 left-2 z-40 flex gap-2">
+        <button onClick={() => setIsPlayersVisible(true)} className="bg-card-bg p-2 rounded-md shadow-md border border-black/5">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.124-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.124-1.283.356-1.857m0 0a3.001 3.001 0 015.658 0M9 9a3 3 0 11-6 0 3 3 0 016 0zm12 0a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        </button>
+      </div>
+      <div className="lg:hidden absolute top-2 right-2 z-40">
+        <button onClick={() => setIsChatVisible(true)} className="bg-card-bg p-2 rounded-md shadow-md border border-black/5">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+        </button>
+      </div>
+
+      {/* Overlay for closing sidebars on mobile */}
+      {(isPlayersVisible || isChatVisible) && (
+        <div 
+          className="lg:hidden absolute inset-0 bg-black/20 z-20"
+          onClick={() => {
+            setIsPlayersVisible(false);
+            setIsChatVisible(false);
+          }}
+        ></div>
+      )}
+
       {/* Winner Overlay */}
       {winner && (
         <div className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center">
@@ -142,7 +167,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
       )}
 
       {/* Sidebar: Players */}
-      <div className="w-64 bg-card-bg border-r border-black/5 flex flex-col">
+      <div className={`absolute lg:relative z-30 w-64 bg-card-bg border-r border-black/5 flex flex-col h-full transition-transform duration-300 ease-in-out transform ${isPlayersVisible ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div className="p-4 border-b border-black/5 font-bold flex justify-between items-center">
           <div className="flex flex-col">
             <span className="text-xs opacity-50 uppercase">{t.players}</span>
@@ -183,7 +208,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
       </div>
 
       {/* Main Area: Drawing Board */}
-      <div className="flex-1 flex flex-col p-4 gap-4 relative">
+      <div className="flex-1 flex flex-col p-2 md:p-4 gap-2 md:gap-4 relative">
         {/* Word Selection Overlay */}
         {isDrawer && gameState === 'selecting_word' && wordOptions.length > 0 && (
           <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -231,14 +256,14 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
           </div>
         )}
 
-        <div className="bg-card-bg rounded-xl shadow-sm p-4 flex justify-between items-center border border-black/5">
-          <div className="flex items-center gap-6">
+        <div className="bg-card-bg rounded-xl shadow-sm p-2 md:p-4 flex flex-col lg:flex-row justify-between items-center border border-black/5 gap-3">
+          <div className="flex items-center gap-2 md:gap-6 w-full lg:w-auto justify-between">
             <div className="flex flex-col">
               <span className="text-xs font-bold opacity-40 uppercase">
                 {gameState === 'drawing' ? t.guessWord : t.roomId}
               </span>
-              <span className="font-mono font-bold">
-                {gameState === 'drawing' ? '???' : roomId}
+              <span className="font-mono font-bold text-sm md:text-base">
+                {gameState === 'drawing' ? '???'.padEnd(roomId.length, '_') : roomId}
               </span>
             </div>
             {gameState === 'drawing' && (
@@ -248,7 +273,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
               </div>
             )}
           </div>
-          <div className="flex gap-1 flex-wrap max-w-[200px]">
+          <div className="flex gap-1 flex-wrap justify-center max-w-full lg:max-w-[200px]">
             {colors.map(c => (
               <button 
                 key={c}
@@ -262,14 +287,14 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
               />
             ))}
           </div>
-          <div className="flex items-center gap-2 bg-black/5 p-2 rounded-lg">
+          <div className="flex items-center gap-2 bg-black/5 p-1 md:p-2 rounded-lg">
             <button
               onClick={() => setTool('brush')}
               disabled={!isDrawer || gameState !== 'drawing'}
               className={`p-2 rounded-lg transition-colors ${tool === 'brush' ? 'bg-primary text-white' : 'hover:bg-black/10'}`}
               title="Brush"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+              <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
             </button>
             <button
               onClick={() => setTool('eraser')}
@@ -277,8 +302,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
               className={`p-2 rounded-lg transition-colors ${tool === 'eraser' ? 'bg-primary text-white' : 'hover:bg-black/10'}`}
               title="Eraser"
             >
-              {/* Eraser Icon */}
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 01-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z" />
               </svg>
             </button>
@@ -288,13 +312,12 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
               className={`p-2 rounded-lg transition-colors ${tool === 'fill' ? 'bg-primary text-white' : 'hover:bg-black/10'}`}
               title="Flood Fill"
             >
-              {/* Paint Bucket Icon */}
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M19 17h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2M5 19h10v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m14-10v8h-2V5h-1L15 4H9L8 5H7v8H5V5c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2z" />
               </svg>
             </button>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <input 
               type="range" 
               min="1" 
@@ -302,9 +325,9 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
               value={brushSize}
               onChange={(e) => setBrushSize(parseInt(e.target.value))}
               disabled={!isDrawer || gameState !== 'drawing'}
-              className="w-32 accent-primary disabled:opacity-30"
+              className="w-24 md:w-32 accent-primary disabled:opacity-30"
             />
-            <span className="font-bold w-6">{brushSize}</span>
+            <span className="font-bold w-6 text-sm md:text-base">{brushSize}</span>
           </div>
         </div>
 
@@ -323,7 +346,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
       </div>
 
       {/* Right Sidebar: Chat & Guesses */}
-      <div className="w-80 bg-card-bg border-l border-black/5 flex flex-col">
+      <div className={`absolute lg:relative z-30 right-0 w-80 bg-card-bg border-l border-black/5 flex flex-col h-full transition-transform duration-300 ease-in-out transform ${isChatVisible ? 'translate-x-0' : 'translate-x-full'} lg:translate-x-0`}>
         <div className="p-4 border-b border-black/5 font-bold uppercase">{t.chat}</div>
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
           {messages.map((m, i) => (
