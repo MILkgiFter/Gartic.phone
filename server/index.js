@@ -169,6 +169,7 @@ io.on('connection', (socket) => {
         gameState: 'waiting',
         timer: null,
         timeLeft: 0,
+        drawingHistory: [], // Add this line
         language: language || 'English',
         settings: settings || { pointsLimit: 500, drawTime: 60 }
       });
@@ -195,6 +196,9 @@ io.on('connection', (socket) => {
         drawerNickname: room.players[room.currentDrawerIndex]?.nickname,
         gameState: room.gameState
       });
+      
+      socket.emit('canvas_state_receive', room.drawingHistory);
+      socket.emit('timer_update', room.timeLeft);
       
       if (room.gameState === 'selecting_word' && socket.id === room.players[room.currentDrawerIndex]?.id) {
         socket.emit('word_options', getRandomWords(roomId, 2));
@@ -226,10 +230,18 @@ io.on('connection', (socket) => {
   });
 
   socket.on('draw', ({ roomId, data }) => {
+    const room = rooms.get(roomId);
+    if (room) {
+      room.drawingHistory.push(data);
+    }
     socket.to(roomId).emit('draw_receive', data);
   });
 
   socket.on('clear_canvas', (roomId) => {
+    const room = rooms.get(roomId);
+    if (room) {
+      room.drawingHistory = [];
+    }
     socket.to(roomId).emit('clear_canvas_receive');
   });
 

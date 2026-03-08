@@ -129,30 +129,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
   ];
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      {/* Mobile Nav Toggles */}
-      <div className="lg:hidden absolute top-2 left-2 z-40 flex gap-2">
-        <button onClick={() => setIsPlayersVisible(true)} className="bg-card-bg p-2 rounded-md shadow-md border border-black/5">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.124-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.124-1.283.356-1.857m0 0a3.001 3.001 0 015.658 0M9 9a3 3 0 11-6 0 3 3 0 016 0zm12 0a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-        </button>
-      </div>
-      <div className="lg:hidden absolute top-2 right-2 z-40">
-        <button onClick={() => setIsChatVisible(true)} className="bg-card-bg p-2 rounded-md shadow-md border border-black/5">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-        </button>
-      </div>
-
-      {/* Overlay for closing sidebars on mobile */}
-      {(isPlayersVisible || isChatVisible) && (
-        <div 
-          className="lg:hidden absolute inset-0 bg-black/20 z-20"
-          onClick={() => {
-            setIsPlayersVisible(false);
-            setIsChatVisible(false);
-          }}
-        ></div>
-      )}
-
+    <div className="flex flex-col lg:flex-row h-screen bg-background overflow-hidden">
       {/* Winner Overlay */}
       {winner && (
         <div className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center">
@@ -166,8 +143,12 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
         </div>
       )}
 
-      {/* Sidebar: Players */}
+      {/* Sidebar: Players (Drawer on mobile) */}
       <div className={`absolute lg:relative z-30 w-64 bg-card-bg border-r border-black/5 flex flex-col h-full transition-transform duration-300 ease-in-out transform ${isPlayersVisible ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+        {/* Close button for mobile */}
+        <button onClick={() => setIsPlayersVisible(false)} className="lg:hidden absolute top-2 right-2 z-40 bg-card-bg p-2 rounded-full shadow-md">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
         <div className="p-4 border-b border-black/5 font-bold flex justify-between items-center">
           <div className="flex flex-col">
             <span className="text-xs opacity-50 uppercase">{t.players}</span>
@@ -207,166 +188,190 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
         </div>
       </div>
 
-      {/* Main Area: Drawing Board */}
-      <div className="flex-1 flex flex-col p-2 md:p-4 gap-2 md:gap-4 relative">
-        {/* Word Selection Overlay */}
-        {isDrawer && gameState === 'selecting_word' && wordOptions.length > 0 && (
-          <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-card-bg p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-6 max-w-sm w-full border border-white/10">
-              <div className="flex flex-col items-center">
-                <h2 className="text-2xl font-black italic tracking-tight text-center uppercase">{t.chooseWord}</h2>
-                <span className="text-primary font-bold text-xl">{timer}s</span>
-              </div>
-              <div className="flex flex-col gap-3 w-full">
-                {wordOptions.map((word) => (
-                  <button
-                    key={word}
-                    onClick={() => handleSelectWord(word)}
-                    className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-xl text-xl shadow-lg transition-all transform hover:scale-105 active:scale-95"
-                  >
-                    {word}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Game State Messages */}
-        {gameState === 'waiting' && (
-          <div className="absolute inset-0 z-10 bg-black/20 flex flex-col items-center justify-center gap-4">
-            <div className="bg-white/90 px-6 py-3 rounded-full font-bold shadow-xl uppercase text-center">
-              {t.waitingPlayers}
-            </div>
-            <button 
-              onClick={handleStartGame}
-              className="bg-primary hover:bg-primary-hover text-white px-8 py-3 rounded-xl font-black shadow-2xl transition-all transform hover:scale-105 active:scale-95 uppercase"
-            >
-              {t.startSolo}
+      {/* Main content: Drawing area + Chat */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Top bar for mobile */}
+        <div className="lg:hidden p-2 border-b border-black/5 bg-card-bg flex justify-between items-center">
+            <button onClick={() => setIsPlayersVisible(true)} className="p-2 rounded-md">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.124-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.124-1.283.356-1.857m0 0a3.001 3.001 0 015.658 0M9 9a3 3 0 11-6 0 3 3 0 016 0zm12 0a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
             </button>
-          </div>
-        )}
-
-        {gameState === 'selecting_word' && !isDrawer && (
-          <div className="absolute inset-0 z-10 bg-black/10 flex items-center justify-center">
-            <div className="bg-white/90 px-6 py-3 rounded-full font-bold shadow-xl flex items-center gap-3 uppercase text-center">
-              <span>{t.drawerChoosing}</span>
-              <span className="text-primary">{timer}s</span>
-            </div>
-          </div>
-        )}
-
-        <div className="bg-card-bg rounded-xl shadow-sm p-2 md:p-4 flex flex-col lg:flex-row justify-between items-center border border-black/5 gap-3">
-          <div className="flex items-center gap-2 md:gap-6 w-full lg:w-auto justify-between">
-            <div className="flex flex-col">
+            <div className="flex flex-col items-center">
               <span className="text-xs font-bold opacity-40 uppercase">
                 {gameState === 'drawing' ? t.guessWord : t.roomId}
               </span>
-              <span className="font-mono font-bold text-sm md:text-base">
+              <span className="font-mono font-bold text-sm">
                 {gameState === 'drawing' ? '???'.padEnd(roomId.length, '_') : roomId}
               </span>
             </div>
-            {gameState === 'drawing' && (
-              <div className="flex flex-col items-center bg-primary/10 px-4 py-1 rounded-lg border border-primary/20">
-                <span className="text-[10px] font-bold text-primary uppercase leading-none mb-1">{t.time}</span>
-                <span className="text-xl font-black text-primary leading-none">{timer}s</span>
+             {gameState === 'drawing' && (
+              <div className="flex flex-col items-center bg-primary/10 px-3 py-1 rounded-lg border border-primary/20">
+                <span className="text-[10px] font-bold text-primary uppercase leading-none">{t.time}</span>
+                <span className="text-lg font-black text-primary leading-none">{timer}s</span>
               </div>
             )}
-          </div>
-          <div className="flex gap-1 flex-wrap justify-center max-w-full lg:max-w-[200px]">
-            {colors.map(c => (
+        </div>
+
+        {/* Main Area: Drawing Board + Tools */}
+        <div className="flex-1 flex flex-col p-2 md:p-4 gap-2 md:gap-4 relative">
+          {/* Word Selection Overlay */}
+          {isDrawer && gameState === 'selecting_word' && wordOptions.length > 0 && (
+            <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-card-bg p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-6 max-w-sm w-full border border-white/10">
+                <div className="flex flex-col items-center">
+                  <h2 className="text-2xl font-black italic tracking-tight text-center uppercase">{t.chooseWord}</h2>
+                  <span className="text-primary font-bold text-xl">{timer}s</span>
+                </div>
+                <div className="flex flex-col gap-3 w-full">
+                  {wordOptions.map((word) => (
+                    <button
+                      key={word}
+                      onClick={() => handleSelectWord(word)}
+                      className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-xl text-xl shadow-lg transition-all transform hover:scale-105 active:scale-95"
+                    >
+                      {word}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Game State Messages */}
+          {gameState === 'waiting' && (
+            <div className="absolute inset-0 z-10 bg-black/20 flex flex-col items-center justify-center gap-4">
+              <div className="bg-white/90 px-6 py-3 rounded-full font-bold shadow-xl uppercase text-center">
+                {t.waitingPlayers}
+              </div>
               <button 
-                key={c}
-                onClick={() => {
-                  setColor(c);
-                  if (tool === 'eraser') setTool('brush');
-                }}
+                onClick={handleStartGame}
+                className="bg-primary hover:bg-primary-hover text-white px-8 py-3 rounded-xl font-black shadow-2xl transition-all transform hover:scale-105 active:scale-95 uppercase"
+              >
+                {t.startSolo}
+              </button>
+            </div>
+          )}
+
+          {gameState === 'selecting_word' && !isDrawer && (
+            <div className="absolute inset-0 z-10 bg-black/10 flex items-center justify-center">
+              <div className="bg-white/90 px-6 py-3 rounded-full font-bold shadow-xl flex items-center gap-3 uppercase text-center">
+                <span>{t.drawerChoosing}</span>
+                <span className="text-primary">{timer}s</span>
+              </div>
+            </div>
+          )}
+
+          <div className="hidden lg:flex bg-card-bg rounded-xl shadow-sm p-4 justify-between items-center border border-black/5">
+            <div className="flex items-center gap-6">
+              <div className="flex flex-col">
+                <span className="text-xs font-bold opacity-40 uppercase">
+                  {gameState === 'drawing' ? t.guessWord : t.roomId}
+                </span>
+                <span className="font-mono font-bold">
+                  {gameState === 'drawing' ? '???' : roomId}
+                </span>
+              </div>
+              {gameState === 'drawing' && (
+                <div className="flex flex-col items-center bg-primary/10 px-4 py-1 rounded-lg border border-primary/20">
+                  <span className="text-[10px] font-bold text-primary uppercase leading-none mb-1">{t.time}</span>
+                  <span className="text-xl font-black text-primary leading-none">{timer}s</span>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-1 flex-wrap max-w-[200px]">
+              {colors.map(c => (
+                <button 
+                  key={c}
+                  onClick={() => {
+                    setColor(c);
+                    if (tool === 'eraser') setTool('brush');
+                  }}
+                  disabled={!isDrawer || gameState !== 'drawing'}
+                  className={`w-6 h-6 rounded-md border-2 transition-transform hover:scale-110 disabled:opacity-30 disabled:hover:scale-100 ${color === c && tool !== 'eraser' ? 'border-primary scale-110' : 'border-black/10'}`}
+                  style={{ backgroundColor: c }}
+                />
+              ))}
+            </div>
+            <div className="flex items-center gap-2 bg-black/5 p-2 rounded-lg">
+              <button
+                onClick={() => setTool('brush')}
                 disabled={!isDrawer || gameState !== 'drawing'}
-                className={`w-6 h-6 rounded-md border-2 transition-transform hover:scale-110 disabled:opacity-30 disabled:hover:scale-100 ${color === c && tool !== 'eraser' ? 'border-primary scale-110' : 'border-black/10'}`}
-                style={{ backgroundColor: c }}
+                className={`p-2 rounded-lg transition-colors ${tool === 'brush' ? 'bg-primary text-white' : 'hover:bg-black/10'}`}
+                title="Brush"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+              </button>
+              <button
+                onClick={() => setTool('eraser')}
+                disabled={!isDrawer || gameState !== 'drawing'}
+                className={`p-2 rounded-lg transition-colors ${tool === 'eraser' ? 'bg-primary text-white' : 'hover:bg-black/10'}`}
+                title="Eraser"
+              >
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 01-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setTool('fill')}
+                disabled={!isDrawer || gameState !== 'drawing'}
+                className={`p-2 rounded-lg transition-colors ${tool === 'fill' ? 'bg-primary text-white' : 'hover:bg-black/10'}`}
+                title="Flood Fill"
+              >
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 17h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2M5 19h10v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m14-10v8h-2V5h-1L15 4H9L8 5H7v8H5V5c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2z" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex items-center gap-4">
+              <input 
+                type="range" 
+                min="1" 
+                max="20" 
+                value={brushSize}
+                onChange={(e) => setBrushSize(parseInt(e.target.value))}
+                disabled={!isDrawer || gameState !== 'drawing'}
+                className="w-32 accent-primary disabled:opacity-30"
               />
+              <span className="font-bold w-6">{brushSize}</span>
+            </div>
+          </div>
+
+          <div className="flex-1 min-h-0">
+            {socketRef.current && (
+              <DrawingBoard 
+                  color={color} 
+                  brushSize={brushSize} 
+                  roomId={roomId} 
+                  socket={socketRef.current}
+                  isDrawingMode={isDrawer && gameState === 'drawing'}
+                  tool={tool}
+                />
+            )}
+          </div>
+        </div>
+
+        {/* Chat Area - (Part of main column, grows from bottom) */}
+        <div className="lg:w-80 lg:border-l lg:border-black/5 flex flex-col bg-card-bg h-[30vh] lg:h-full">
+          <div className="p-4 border-b border-black/5 font-bold uppercase hidden lg:block">{t.chat}</div>
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col-reverse gap-2">
+            {[...messages].reverse().map((m, i) => (
+              <div key={i} className={`text-sm ${m.user === 'System' ? 'italic opacity-50' : ''} ${m.isCorrect ? 'text-green-600 font-bold' : ''}`}>
+                <span className="font-bold mr-2">{m.user}:</span>
+                <span>{m.text}</span>
+              </div>
             ))}
           </div>
-          <div className="flex items-center gap-2 bg-black/5 p-1 md:p-2 rounded-lg">
-            <button
-              onClick={() => setTool('brush')}
-              disabled={!isDrawer || gameState !== 'drawing'}
-              className={`p-2 rounded-lg transition-colors ${tool === 'brush' ? 'bg-primary text-white' : 'hover:bg-black/10'}`}
-              title="Brush"
-            >
-              <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-            </button>
-            <button
-              onClick={() => setTool('eraser')}
-              disabled={!isDrawer || gameState !== 'drawing'}
-              className={`p-2 rounded-lg transition-colors ${tool === 'eraser' ? 'bg-primary text-white' : 'hover:bg-black/10'}`}
-              title="Eraser"
-            >
-              <svg className="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 01-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => setTool('fill')}
-              disabled={!isDrawer || gameState !== 'drawing'}
-              className={`p-2 rounded-lg transition-colors ${tool === 'fill' ? 'bg-primary text-white' : 'hover:bg-black/10'}`}
-              title="Flood Fill"
-            >
-              <svg className="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M19 17h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2M5 19h10v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m14-10v8h-2V5h-1L15 4H9L8 5H7v8H5V5c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2z" />
-              </svg>
-            </button>
-          </div>
-          <div className="flex items-center gap-2 md:gap-4">
+          <form onSubmit={handleSendMessage} className="p-4 border-t border-black/5">
             <input 
-              type="range" 
-              min="1" 
-              max="20" 
-              value={brushSize}
-              onChange={(e) => setBrushSize(parseInt(e.target.value))}
-              disabled={!isDrawer || gameState !== 'drawing'}
-              className="w-24 md:w-32 accent-primary disabled:opacity-30"
+              type="text" 
+              value={guess}
+              onChange={(e) => setGuess(e.target.value)}
+              disabled={isDrawer && gameState === 'drawing'}
+              placeholder={isDrawer && gameState === 'drawing' ? t.youAreDrawing : t.typeGuess}
+              className="w-full bg-background border border-black/5 rounded-lg px-4 py-2 focus:outline-none focus:border-primary transition-colors font-medium disabled:opacity-50"
             />
-            <span className="font-bold w-6 text-sm md:text-base">{brushSize}</span>
-          </div>
+          </form>
         </div>
-
-        <div className="flex-1 min-h-0">
-          {socketRef.current && (
-            <DrawingBoard 
-                color={color} 
-                brushSize={brushSize} 
-                roomId={roomId} 
-                socket={socketRef.current}
-                isDrawingMode={isDrawer && gameState === 'drawing'}
-                tool={tool}
-              />
-          )}
-        </div>
-      </div>
-
-      {/* Right Sidebar: Chat & Guesses */}
-      <div className={`absolute lg:relative z-30 right-0 w-80 bg-card-bg border-l border-black/5 flex flex-col h-full transition-transform duration-300 ease-in-out transform ${isChatVisible ? 'translate-x-0' : 'translate-x-full'} lg:translate-x-0`}>
-        <div className="p-4 border-b border-black/5 font-bold uppercase">{t.chat}</div>
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
-          {messages.map((m, i) => (
-            <div key={i} className={`text-sm ${m.user === 'System' ? 'italic opacity-50' : ''} ${m.isCorrect ? 'text-green-600 font-bold' : ''}`}>
-              <span className="font-bold mr-2">{m.user}:</span>
-              <span>{m.text}</span>
-            </div>
-          ))}
-        </div>
-        <form onSubmit={handleSendMessage} className="p-4 border-t border-black/5">
-          <input 
-            type="text" 
-            value={guess}
-            onChange={(e) => setGuess(e.target.value)}
-            disabled={isDrawer && gameState === 'drawing'}
-            placeholder={isDrawer && gameState === 'drawing' ? t.youAreDrawing : t.typeGuess}
-            className="w-full bg-background border border-black/5 rounded-lg px-4 py-2 focus:outline-none focus:border-primary transition-colors font-medium disabled:opacity-50"
-          />
-        </form>
-      </div>
+      </main>
     </div>
   );
 }

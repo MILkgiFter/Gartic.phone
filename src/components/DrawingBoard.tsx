@@ -75,8 +75,49 @@ export default function DrawingBoard({
       if (socket) {
         socket.off('draw_receive');
         socket.off('clear_canvas_receive');
+        socket.off('canvas_state_receive');
       }
     };
+  }, [socket]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleRedraw = (data: any) => {
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext('2d');
+      if (!ctx) return;
+
+      if (data.tool === 'fill') {
+        floodFill(ctx, data.x, data.y, data.color);
+      } else {
+        ctx.lineWidth = data.size;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = data.tool === 'eraser' ? '#ffffff' : data.color;
+        ctx.beginPath();
+        ctx.moveTo(data.prevX, data.prevY);
+        ctx.lineTo(data.x, data.y);
+        ctx.stroke();
+      }
+    }
+
+    const handleInitialState = (history: any[]) => {
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext('2d');
+      if (!ctx || !canvas) return;
+      
+      // Clear canvas before redrawing
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      history.forEach(data => handleRedraw(data));
+    };
+
+    socket.on('canvas_state_receive', handleInitialState);
+
+    return () => {
+      socket.off('canvas_state_receive', handleInitialState);
+    }
+
   }, [socket]);
 
   const lastPos = useRef({ x: 0, y: 0 });
