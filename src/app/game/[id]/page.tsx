@@ -43,6 +43,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
   const [isPlayersVisible, setIsPlayersVisible] = useState(false);
   const [isChatVisible, setIsChatVisible] = useState(false);
   const [drawingHistory, setDrawingHistory] = useState<any[]>([]);
+  const isSpectator = players.find(p => p.id === socketRef.current?.id)?.isSpectator || false;
 
   useEffect(() => {
     const userId = localStorage.getItem('gartic_userId');
@@ -274,6 +275,12 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
             )}
         </div>
 
+        {isSpectator && (
+          <div className="absolute bottom-4 right-4 bg-yellow-500 text-white font-bold py-2 px-4 rounded-full shadow-lg z-50">
+            You are spectating
+          </div>
+        )}
+
         {/* Toolbar for Desktop */}
         <div className="hidden lg:flex bg-card-bg rounded-xl shadow-sm p-4 justify-between items-center border border-black/5">
             <div className="flex items-center gap-6">
@@ -380,8 +387,8 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
 
       {/* Mobile-only Chat - This is not a drawer, but a visible part of the layout */}
        <div className="lg:hidden flex flex-col bg-card-bg border-t border-black/5">
-          <div className="overflow-y-auto p-4 flex flex-col-reverse gap-2 h-32">
-             {[...messages].reverse().map((m, i) => (
+          <div className="overflow-y-auto p-4 flex flex-col-reverse gap-2 h-24">
+             {[...messages].slice(0, 4).map((m, i) => (
               <div key={i} className={`text-sm ${m.user === 'System' ? 'italic opacity-50' : ''} ${m.isCorrect ? 'text-green-600 font-bold' : ''}`}>
                 <span className="font-bold mr-2">{m.user}:</span>
                 <span>{m.text}</span>
@@ -393,8 +400,8 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
               type="text" 
               value={guess}
               onChange={(e) => setGuess(e.target.value)}
-              disabled={isDrawer && gameState === 'drawing'}
-              placeholder={isDrawer && gameState === 'drawing' ? t.youAreDrawing : t.typeGuess}
+              disabled={(isDrawer && gameState === 'drawing') || isSpectator}
+              placeholder={isSpectator ? "You are spectating..." : (isDrawer && gameState === 'drawing' ? t.youAreDrawing : t.typeGuess)}
               className="w-full bg-background border border-black/5 rounded-lg px-4 py-2 focus:outline-none focus:border-primary transition-colors font-medium disabled:opacity-50"
             />
           </form>

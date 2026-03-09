@@ -125,13 +125,26 @@ function startNewRound(roomId) {
     }
   }
 
+    // All players are now active for the new round
+  room.players.forEach(p => p.isSpectator = false);
+
+  // Filter for active players for the new round
+  const activePlayers = room.players.filter(p => !p.disconnected);
+  if (activePlayers.length < 2 && room.players.length >= 2) {
+      // Not enough active players to continue, wait for more
+      room.gameState = 'waiting';
+      io.to(roomId).emit('game_state_update', { gameState: 'waiting' });
+      return;
+  }
+  if (activePlayers.length < 1) return; // or < 2 depending on rules
+
   // Reset round state
-  room.currentDrawerIndex = (room.currentDrawerIndex + 1) % room.players.length;
+  room.currentDrawerIndex = (room.currentDrawerIndex + 1) % activePlayers.length;
   room.currentWord = '';
   room.guessedPlayers = new Set();
   room.gameState = 'selecting_word';
 
-  const drawer = room.players[room.currentDrawerIndex];
+  const drawer = activePlayers[room.currentDrawerIndex];
   const options = getRandomWords(roomId, 2);
 
   io.to(roomId).emit('round_start', {
@@ -185,6 +198,7 @@ io.on('connection', (socket) => {
       existingPlayer.id = socket.id;
       existingPlayer.nickname = nickname; // In case they changed it
       existingPlayer.disconnected = false;
+      existingPlayer.isSpectator = room.gameState !== 'waiting'; // Re-check spectator status on rejoin
       
       const t = translations[room.language || 'English'];
       io.to(roomId).emit('message', { user: 'System', text: `${nickname} ${t.joinedRoom}` });
@@ -205,7 +219,8 @@ io.on('connection', (socket) => {
       }
       
     } else {
-      const player = { id: socket.id, userId, nickname, points: 0, disconnected: false };
+      const isSpectator = room.gameState !== 'waiting';
+      const player = { id: socket.id, userId, nickname, points: 0, disconnected: false, isSpectator };
       room.players.push(player);
       
       io.to(roomId).emit('update_players', room.players);
@@ -250,7 +265,10 @@ io.on('connection', (socket) => {
     if (!room) return;
 
     const text = message.text.toLowerCase().trim();
+    const player = room.players.find(p => p.id === socket.id);
+
     const isCorrect = room.gameState === 'drawing' && 
+                     player && !player.isSpectator &&
                      text === room.currentWord && 
                      !room.guessedPlayers.has(socket.id) &&
                      socket.id !== room.players[room.currentDrawerIndex].id;
