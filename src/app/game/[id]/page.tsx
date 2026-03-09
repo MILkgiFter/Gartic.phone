@@ -11,6 +11,7 @@ interface Player {
   nickname: string;
   points: number;
   disconnected?: boolean;
+  isSpectator?: boolean;
 }
 
 type GameState = 'waiting' | 'selecting_word' | 'drawing';
