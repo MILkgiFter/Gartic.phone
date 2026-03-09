@@ -125,7 +125,8 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
 
   const colors = [
     '#000000', '#ffffff', '#7f7f7f', '#c3c3c3', '#880015', '#ed1c24', '#ff7f27', '#fff200', '#22b14c', '#00a2e8', 
-    '#3f48cc', '#a349a4', '#b97a57', '#ffaec9', '#ffc90e', '#efe4b0', '#b5e61d', '#99d9ea', '#7092be', '#c8bfe7'
+    '#3f48cc', '#a349a4', '#b97a57', '#ffaec9', '#ffc90e', '#efe4b0', '#b5e61d', '#99d9ea', '#7092be', '#c8bfe7',
+    '#582d00', '#ff00ff', '#00ffff', '#808000', '#008080', '#000080', '#ff6347', '#ff8c00', '#ffd700', '#32cd32'
   ];
 
   return (
@@ -315,8 +316,8 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
 
          {/* Toolbar for Mobile */}
         <div className="lg:hidden flex flex-wrap gap-2 p-2 bg-card-bg rounded-xl shadow-sm border border-black/5 justify-center">
-            <div className="flex gap-1 flex-wrap justify-center max-w-[200px]">
-              {colors.slice(0, 10).map(c => (
+            <div className="flex gap-1 flex-wrap justify-center">
+              {colors.map(c => (
                 <button 
                   key={c}
                   onClick={() => { setColor(c); if (tool === 'eraser') setTool('brush'); }}
@@ -332,6 +333,9 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
               </button>
               <button onClick={() => setTool('eraser')} disabled={!isDrawer || gameState !== 'drawing'} className={`p-2 rounded-lg ${tool === 'eraser' ? 'bg-primary text-white' : ''}`} title="Eraser">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 01-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z" /></svg>
+              </button>
+              <button onClick={() => setTool('fill')} disabled={!isDrawer || gameState !== 'drawing'} className={`p-2 rounded-lg ${tool === 'fill' ? 'bg-primary text-white' : ''}`} title="Flood Fill">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 17h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2M5 19h10v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m14-10v8h-2V5h-1L15 4H9L8 5H7v8H5V5c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2z" /></svg>
               </button>
             </div>
              <input type="range" min="1" max="20" value={brushSize} onChange={(e) => setBrushSize(parseInt(e.target.value))} disabled={!isDrawer || gameState !== 'drawing'} className="w-24 accent-primary disabled:opacity-30" />
