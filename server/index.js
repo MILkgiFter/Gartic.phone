@@ -263,7 +263,14 @@ io.on('connection', (socket) => {
   socket.on('undo', (roomId) => {
     const room = rooms.get(roomId);
     if (room && room.drawingHistory.length > 0) {
-      room.drawingHistory.pop();
+      const lastAction = room.drawingHistory[room.drawingHistory.length - 1];
+      if (lastAction && lastAction.strokeId) {
+        // Remove all parts of the last stroke
+        room.drawingHistory = room.drawingHistory.filter(action => action.strokeId !== lastAction.strokeId);
+      } else {
+        // Fallback for actions without a strokeId (like fill)
+        room.drawingHistory.pop();
+      }
       io.to(roomId).emit('canvas_state_receive', room.drawingHistory);
     }
   });
