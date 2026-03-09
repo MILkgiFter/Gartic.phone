@@ -260,6 +260,14 @@ io.on('connection', (socket) => {
     socket.to(roomId).emit('clear_canvas_receive');
   });
 
+  socket.on('undo', (roomId) => {
+    const room = rooms.get(roomId);
+    if (room && room.drawingHistory.length > 0) {
+      room.drawingHistory.pop();
+      io.to(roomId).emit('canvas_state_receive', room.drawingHistory);
+    }
+  });
+
   socket.on('send_message', ({ roomId, message }) => {
     const room = rooms.get(roomId);
     if (!room) return;
@@ -346,3 +354,25 @@ const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`Socket server running on port ${PORT}`);
 });
+
+// Cleanup interval for inactive rooms
+setInterval(() => {
+  const now = Date.now();
+  for (const [roomId, room] of rooms.entries()) {
+    const allDisconnected = room.players.every(p => p.disconnected);
+    if (allDisconnected && room.players.length > 0) {
+      // If all players are disconnected, mark the room for deletion
+      if (!room.inactiveSince) {
+        room.inactiveSince = now;
+      }
+      // If inactive for more than a minute, delete
+      if (now - room.inactiveSince > 60000) {
+        console.log(`Deleting inactive room ${roomId}`);
+        rooms.delete(roomId);
+      }
+    } else {
+      // If players are active, reset the inactivity marker
+      delete room.inactiveSince;
+    }
+  }
+}, 300000); // Check every 5 minutes

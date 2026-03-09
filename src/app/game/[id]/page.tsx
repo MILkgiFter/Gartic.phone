@@ -318,7 +318,10 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 01-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z" /></svg>
               </button>
               <button onClick={() => setTool('fill')} disabled={!isDrawer || gameState !== 'drawing'} className={`p-2 rounded-lg transition-colors ${tool === 'fill' ? 'bg-primary text-white' : 'hover:bg-black/10'}`} title="Flood Fill">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19 17h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2M5 19h10v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m14-10v8h-2V5h-1L15 4H9L8 5H7v8H5V5c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2z" /></svg>
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3a1 1 0 00-1 1v3.586l-3.293-3.293a1 1 0 10-1.414 1.414L10.586 9H7a1 1 0 00-1 1c0 4.418 3.582 8 8 8s8-3.582 8-8a1 1 0 00-1-1h-3.586l4.293-4.293a1 1 0 10-1.414-1.414L13 7.586V4a1 1 0 00-1-1z" /></svg>
+              </button>
+              <button onClick={() => socketRef.current?.emit('undo', roomId)} disabled={!isDrawer || gameState !== 'drawing' || drawingHistory.length === 0} className="p-2 rounded-lg transition-colors hover:bg-black/10 disabled:opacity-30" title="Undo">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l4-4m-4 4l4 4" /></svg>
               </button>
             </div>
             <div className="flex items-center gap-4">
@@ -355,7 +358,10 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 01-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z" /></svg>
               </button>
               <button onClick={() => setTool('fill')} disabled={!isDrawer || gameState !== 'drawing'} className={`p-2 rounded-lg ${tool === 'fill' ? 'bg-primary text-white' : ''}`} title="Flood Fill">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 17h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2m-2-2h2v2h-2v-2M5 19h10v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m0-2h2v2H5v-2m14-10v8h-2V5h-1L15 4H9L8 5H7v8H5V5c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2z" /></svg>
+                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3a1 1 0 00-1 1v3.586l-3.293-3.293a1 1 0 10-1.414 1.414L10.586 9H7a1 1 0 00-1 1c0 4.418 3.582 8 8 8s8-3.582 8-8a1 1 0 00-1-1h-3.586l4.293-4.293a1 1 0 10-1.414-1.414L13 7.586V4a1 1 0 00-1-1z" /></svg>
+              </button>
+               <button onClick={() => socketRef.current?.emit('undo', roomId)} disabled={!isDrawer || gameState !== 'drawing' || drawingHistory.length === 0} className="p-2 rounded-lg hover:bg-black/10 disabled:opacity-30" title="Undo">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l4-4m-4 4l4 4" /></svg>
               </button>
             </div>
              <input type="range" min="1" max="20" value={brushSize} onChange={(e) => setBrushSize(parseInt(e.target.value))} disabled={!isDrawer || gameState !== 'drawing'} className="w-24 accent-primary disabled:opacity-30" />
@@ -387,7 +393,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
 
       {/* Mobile-only Chat - This is not a drawer, but a visible part of the layout */}
        <div className="lg:hidden flex flex-col bg-card-bg border-t border-black/5">
-          <div className="overflow-y-auto p-4 flex flex-col-reverse gap-2 h-24">
+          <div className="overflow-y-auto p-4 flex flex-col-reverse gap-2 h-20">
              {[...messages].slice(0, 4).map((m, i) => (
               <div key={i} className={`text-sm ${m.user === 'System' ? 'italic opacity-50' : ''} ${m.isCorrect ? 'text-green-600 font-bold' : ''}`}>
                 <span className="font-bold mr-2">{m.user}:</span>
@@ -400,8 +406,8 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
               type="text" 
               value={guess}
               onChange={(e) => setGuess(e.target.value)}
-              disabled={(isDrawer && gameState === 'drawing') || isSpectator}
-              placeholder={isSpectator ? "You are spectating..." : (isDrawer && gameState === 'drawing' ? t.youAreDrawing : t.typeGuess)}
+              disabled={isDrawer && gameState === 'drawing'}
+              placeholder={isDrawer ? t.youAreDrawing : t.typeGuess}
               className="w-full bg-background border border-black/5 rounded-lg px-4 py-2 focus:outline-none focus:border-primary transition-colors font-medium disabled:opacity-50"
             />
           </form>
