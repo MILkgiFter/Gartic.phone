@@ -380,7 +380,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
 
       {/* Mobile-only Chat - This is not a drawer, but a visible part of the layout */}
        <div className="lg:hidden flex flex-col bg-card-bg border-t border-black/5">
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col-reverse gap-2 h-32 md:h-40">
+          <div className="overflow-y-auto p-4 flex flex-col-reverse gap-2 h-32">
              {[...messages].reverse().map((m, i) => (
               <div key={i} className={`text-sm ${m.user === 'System' ? 'italic opacity-50' : ''} ${m.isCorrect ? 'text-green-600 font-bold' : ''}`}>
                 <span className="font-bold mr-2">{m.user}:</span>

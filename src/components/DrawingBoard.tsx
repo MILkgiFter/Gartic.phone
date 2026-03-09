@@ -25,46 +25,58 @@ export default function DrawingBoard({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
+  const drawFromData = (data: any, ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+    const w = canvas.width;
+    const h = canvas.height;
+
+    if (data.tool === 'fill') {
+      // Flood fill can be complex to re-apply from history, for now we will skip re-filling
+      // A better approach would be to save the canvas state (imageData) after fill
+      // For now, we attempt to re-run the flood fill, which may be imperfect.
+      floodFill(ctx, Math.floor(data.x * w), Math.floor(data.y * h), data.color);
+    } else {
+      ctx.lineWidth = data.size;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = data.tool === 'eraser' ? '#ffffff' : data.color;
+      ctx.beginPath();
+      ctx.moveTo(data.prevX * w, data.prevY * h);
+      ctx.lineTo(data.x * w, data.y * h);
+      ctx.stroke();
+    }
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas) {
-      canvas.width = 1200; // A larger canvas to allow for scrolling
-      canvas.height = 800;
+    if (!canvas) return;
+
+    const redrawHistory = () => {
       const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      if (!ctx) return;
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      history.forEach(item => drawFromData(item, ctx, canvas));
+    };
+
+    const resizeCanvas = () => {
+      const parent = canvas.parentElement;
+      if (parent) {
+        canvas.width = parent.clientWidth;
+        canvas.height = parent.clientHeight;
+        redrawHistory(); // Redraw history after resizing
       }
-    }
-  }, []);
+    };
 
-  // Redraw canvas whenever history changes
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!ctx || !canvas) return;
+    // This effect runs on mount and whenever `history` changes.
+    // We set up the resize listener and perform an initial resize/redraw.
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
-    // Clear canvas before redrawing
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // When the effect re-runs due to history change, we just need to redraw.
+    redrawHistory();
 
-    const redraw = (data: any) => {
-      if (data.tool === 'fill') {
-        // Flood fill can be complex to re-apply from history, for now we will skip re-filling
-        // A better approach would be to save the canvas state (imageData) after fill
-      } else {
-        ctx.lineWidth = data.size;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = data.tool === 'eraser' ? '#ffffff' : data.color;
-        ctx.beginPath();
-        ctx.moveTo(data.prevX, data.prevY);
-        ctx.lineTo(data.x, data.y);
-        ctx.stroke();
-      }
-    }
-
-    history.forEach(item => redraw(item));
-
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+    };
   }, [history]);
 
   const lastPos = useRef({ x: 0, y: 0 });
@@ -93,14 +105,14 @@ export default function DrawingBoard({
       if (socket && roomId) {
         socket.emit('draw', {
           roomId,
-          data: { x, y, color, tool: 'fill' }
+          data: { x: x / canvas.width, y: y / canvas.height, color, tool: 'fill' }
         });
       }
       return;
     }
 
     setIsDrawing(true);
-    lastPos.current = { x, y };
+    lastPos.current = { x: x / canvas.width, y: y / canvas.height };
   };
 
   const stopDrawing = () => {
@@ -133,19 +145,22 @@ export default function DrawingBoard({
     ctx.strokeStyle = tool === 'eraser' ? '#ffffff' : color;
 
     ctx.beginPath();
-    ctx.moveTo(prevX, prevY);
+    ctx.moveTo(prevX * canvas.width, prevY * canvas.height);
     ctx.lineTo(x, y);
     ctx.stroke();
+
+    const x_rel = x / canvas.width;
+    const y_rel = y / canvas.height;
 
     // Emit drawing event
     if (socket && roomId) {
       socket.emit('draw', {
         roomId,
-        data: { x, y, prevX, prevY, color, size: brushSize, tool }
+        data: { x: x_rel, y: y_rel, prevX, prevY, color, size: brushSize, tool }
       });
     }
 
-    lastPos.current = { x, y }
+    lastPos.current = { x: x_rel, y: y_rel };
   };
 
   const floodFill = (ctx: CanvasRenderingContext2D, startX: number, startY: number, fillColor: string) => {
@@ -245,7 +260,7 @@ export default function DrawingBoard({
   };
 
   return (
-    <div className="relative w-full h-full bg-white rounded-lg overflow-auto border-4 border-black/5 shadow-inner">
+    <div className="relative w-full h-full bg-white rounded-lg overflow-auto lg:overflow-hidden touch-none border-4 border-black/5 shadow-inner">
       <canvas
         ref={canvasRef}
         onMouseDown={startDrawing}
@@ -255,7 +270,7 @@ export default function DrawingBoard({
         onTouchStart={startDrawing}
         onTouchMove={draw}
         onTouchEnd={stopDrawing}
-        className="block cursor-crosshair touch-none"
+        className="block cursor-crosshair"
       />
       {isDrawingMode && (
         <button 
