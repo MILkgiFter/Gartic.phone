@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Socket } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 
 interface DrawingBoardProps {
   color?: string;
@@ -12,8 +12,6 @@ interface DrawingBoardProps {
   tool?: 'brush' | 'eraser' | 'fill';
   history?: any[];
 }
-
-const generateStrokeId = () => `stroke_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
 export default function DrawingBoard({ 
   color = '#000000', 
@@ -26,20 +24,16 @@ export default function DrawingBoard({
 }: DrawingBoardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const lastPos = useRef({ x: 0, y: 0 });
-  const currentStrokeId = useRef<string | null>(null);
 
   const drawFromData = (data: any, ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     const w = canvas.width;
     const h = canvas.height;
 
     if (data.tool === 'fill') {
-      // This is a placeholder for a proper flood fill implementation.
-      // For now, we will draw a small circle to indicate where the fill was attempted.
-      ctx.beginPath();
-      ctx.arc(data.x * w, data.y * h, 10, 0, 2 * Math.PI, false);
-      ctx.fillStyle = data.color;
-      ctx.fill();
+      // Flood fill can be complex to re-apply from history, for now we will skip re-filling
+      // A better approach would be to save the canvas state (imageData) after fill
+      // For now, we attempt to re-run the flood fill, which may be imperfect.
+      floodFill(ctx, Math.floor(data.x * w), Math.floor(data.y * h), data.color);
     } else {
       ctx.lineWidth = data.size;
       ctx.lineCap = 'round';
@@ -51,13 +45,12 @@ export default function DrawingBoard({
     }
   };
 
-  // Effect for resizing and redrawing history
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const redrawHistory = () => {
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      const ctx = canvas.getContext('2d');
       if (!ctx) return;
       ctx.fillStyle = 'white';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -69,109 +62,205 @@ export default function DrawingBoard({
       if (parent) {
         canvas.width = parent.clientWidth;
         canvas.height = parent.clientHeight;
-        redrawHistory();
+        redrawHistory(); // Redraw history after resizing
       }
     };
 
+    // This effect runs on mount and whenever `history` changes.
+    // We set up the resize listener and perform an initial resize/redraw.
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
+
+    // When the effect re-runs due to history change, we just need to redraw.
+    redrawHistory();
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
     };
   }, [history]);
 
-  const getCoords = (e: React.MouseEvent | React.TouchEvent): {x: number, y: number} | null => {
-    const canvas = canvasRef.current;
-    if (!canvas) return null;
-    const rect = canvas.getBoundingClientRect();
-    let clientX, clientY;
-
-    if ('touches' in e) {
-      if (e.touches.length === 0) return null;
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else {
-      clientX = (e as React.MouseEvent).clientX;
-      clientY = (e as React.MouseEvent).clientY;
-    }
-    return { x: clientX - rect.left, y: clientY - rect.top };
-  }
+  const lastPos = useRef({ x: 0, y: 0 });
 
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
     if (!isDrawingMode) return;
     
     const canvas = canvasRef.current;
-    const coords = getCoords(e);
-    if (!canvas || !coords) return;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    const data = {
-      x: coords.x / canvas.width,
-      y: coords.y / canvas.height,
-      color,
-      tool,
-      strokeId: generateStrokeId()
-    };
+    const rect = canvas.getBoundingClientRect();
+    let x, y;
+
+    if ('touches' in e) {
+      x = e.touches[0].clientX - rect.left;
+      y = e.touches[0].clientY - rect.top;
+    } else {
+      x = (e as React.MouseEvent).clientX - rect.left;
+      y = (e as React.MouseEvent).clientY - rect.top;
+    }
 
     if (tool === 'fill') {
+      floodFill(ctx, Math.floor(x), Math.floor(y), color);
       if (socket && roomId) {
-        socket.emit('draw', { roomId, data });
+        socket.emit('draw', {
+          roomId,
+          data: { x: x / canvas.width, y: y / canvas.height, color, tool: 'fill' }
+        });
       }
       return;
     }
 
     setIsDrawing(true);
-    currentStrokeId.current = data.strokeId;
-    lastPos.current = { x: data.x, y: data.y };
+    lastPos.current = { x: x / canvas.width, y: y / canvas.height };
   };
 
   const stopDrawing = () => {
     setIsDrawing(false);
-    currentStrokeId.current = null;
   };
 
   const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
     if (!isDrawing || !isDrawingMode) return;
 
     const canvas = canvasRef.current;
-    const coords = getCoords(e);
-    if (!canvas || !coords) return;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
 
-    const data = {
-      x: coords.x / canvas.width,
-      y: coords.y / canvas.height,
-      prevX: lastPos.current.x,
-      prevY: lastPos.current.y,
-      color,
-      size: brushSize,
-      tool,
-      strokeId: currentStrokeId.current
+    const rect = canvas.getBoundingClientRect();
+    let x, y;
+
+    if ('touches' in e) {
+      x = e.touches[0].clientX - rect.left;
+      y = e.touches[0].clientY - rect.top;
+    } else {
+      x = (e as React.MouseEvent).clientX - rect.left;
+      y = (e as React.MouseEvent).clientY - rect.top;
+    }
+
+    const prevX = lastPos.current.x;
+    const prevY = lastPos.current.y;
+
+    ctx.lineWidth = brushSize;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = tool === 'eraser' ? '#ffffff' : color;
+
+    ctx.beginPath();
+    ctx.moveTo(prevX * canvas.width, prevY * canvas.height);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+    const x_rel = x / canvas.width;
+    const y_rel = y / canvas.height;
+
+    // Emit drawing event
+    if (socket && roomId) {
+      socket.emit('draw', {
+        roomId,
+        data: { x: x_rel, y: y_rel, prevX, prevY, color, size: brushSize, tool }
+      });
+    }
+
+    lastPos.current = { x: x_rel, y: y_rel };
+  };
+
+  const floodFill = (ctx: CanvasRenderingContext2D, startX: number, startY: number, fillColor: string) => {
+    const canvas = ctx.canvas;
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    const getPixel = (x: number, y: number) => {
+      if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) return [-1, -1, -1, -1];
+      const offset = (y * canvas.width + x) * 4;
+      return [data[offset], data[offset + 1], data[offset + 2], data[offset + 3]];
     };
 
-    // Draw locally immediately
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      drawFromData(data, ctx, canvas);
+    const targetColor = getPixel(startX, startY);
+    const fillRgb = hexToRgb(fillColor);
+
+    if (!fillRgb || (targetColor[0] === fillRgb.r && targetColor[1] === fillRgb.g && targetColor[2] === fillRgb.b)) {
+      return;
     }
 
-    // Send to server
-    if (socket && roomId && currentStrokeId.current) {
-      socket.emit('draw', { roomId, data });
+    const stack: [number, number][] = [[startX, startY]];
+    
+    while (stack.length > 0) {
+      const [x, y] = stack.pop()!;
+      let currentY = y;
+
+      while (currentY >= 0 && matchColor(getPixel(x, currentY), targetColor)) {
+        currentY--;
+      }
+      currentY++;
+
+      let reachLeft = false;
+      let reachRight = false;
+
+      while (currentY < canvas.height && matchColor(getPixel(x, currentY), targetColor)) {
+        setPixel(x, currentY, fillRgb, data, canvas.width);
+
+        if (x > 0) {
+          if (matchColor(getPixel(x - 1, currentY), targetColor)) {
+            if (!reachLeft) {
+              stack.push([x - 1, currentY]);
+              reachLeft = true;
+            }
+          } else if (reachLeft) {
+            reachLeft = false;
+          }
+        }
+
+        if (x < canvas.width - 1) {
+          if (matchColor(getPixel(x + 1, currentY), targetColor)) {
+            if (!reachRight) {
+              stack.push([x + 1, currentY]);
+              reachRight = true;
+            }
+          } else if (reachRight) {
+            reachRight = false;
+          }
+        }
+
+        currentY++;
+      }
     }
 
-    lastPos.current = { x: data.x, y: data.y };
+    ctx.putImageData(imageData, 0, 0);
+  };
+
+  const matchColor = (c1: number[], c2: number[]) => {
+    return c1[0] === c2[0] && c1[1] === c2[1] && c1[2] === c2[2] && c1[3] === c2[3];
+  };
+
+  const setPixel = (x: number, y: number, color: {r: number, g: number, b: number}, data: Uint8ClampedArray, width: number) => {
+    const offset = (y * width + x) * 4;
+    data[offset] = color.r;
+    data[offset + 1] = color.g;
+    data[offset + 2] = color.b;
+    data[offset + 3] = 255;
+  };
+
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
   };
 
   const clearCanvas = () => {
-    if (socket && roomId) {
-      socket.emit('clear_canvas', roomId);
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (canvas && ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (socket && roomId) {
+        socket.emit('clear_canvas', roomId);
+      }
     }
   };
 
   return (
-    <div className="relative w-full h-full bg-white rounded-lg overflow-hidden touch-none border-2 border-gray-200">
+    <div className="relative w-full h-full bg-white rounded-lg overflow-auto lg:overflow-hidden touch-none border-4 border-black/5 shadow-inner">
       <canvas
         ref={canvasRef}
         onMouseDown={startDrawing}
@@ -186,7 +275,7 @@ export default function DrawingBoard({
       {isDrawingMode && (
         <button 
           onClick={clearCanvas}
-          className="absolute bottom-2 right-2 bg-red-500 text-white px-3 py-1 rounded-md text-sm font-bold shadow-md hover:bg-red-600 transition-colors"
+          className="absolute bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg font-bold shadow-lg hover:bg-red-600 transition-colors"
         >
           Clear
         </button>
