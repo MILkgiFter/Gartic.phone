@@ -42,6 +42,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
   const socketRef = useRef<Socket | null>(null);
   const [isPlayersVisible, setIsPlayersVisible] = useState(false);
   const [isChatVisible, setIsChatVisible] = useState(false);
+  const [drawingHistory, setDrawingHistory] = useState<any[]>([]);
 
   useEffect(() => {
     const userId = localStorage.getItem('gartic_userId');
@@ -85,6 +86,18 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
       setGameState('waiting');
       // Clear winner after 5 seconds
       setTimeout(() => setWinner(null), 5000);
+    });
+
+    socket.on('canvas_state_receive', (history) => {
+      setDrawingHistory(history);
+    });
+
+    socket.on('draw_receive', (data) => {
+      setDrawingHistory(prev => [...prev, data]);
+    });
+
+    socket.on('clear_canvas_receive', () => {
+      setDrawingHistory([]);
     });
 
     return () => {
@@ -310,7 +323,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
         {/* Drawing Board */}
         <div className="flex-1 min-h-0">
           {socketRef.current && (
-            <DrawingBoard color={color} brushSize={brushSize} roomId={roomId} socket={socketRef.current} isDrawingMode={isDrawer && gameState === 'drawing'} tool={tool} />
+            <DrawingBoard color={color} brushSize={brushSize} roomId={roomId} socket={socketRef.current} isDrawingMode={isDrawer && gameState === 'drawing'} tool={tool} history={drawingHistory} />
           )}
         </div>
 
@@ -367,7 +380,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
 
       {/* Mobile-only Chat - This is not a drawer, but a visible part of the layout */}
        <div className="lg:hidden flex flex-col bg-card-bg border-t border-black/5">
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col-reverse gap-2 h-40">
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col-reverse gap-2 h-32 md:h-40">
              {[...messages].reverse().map((m, i) => (
               <div key={i} className={`text-sm ${m.user === 'System' ? 'italic opacity-50' : ''} ${m.isCorrect ? 'text-green-600 font-bold' : ''}`}>
                 <span className="font-bold mr-2">{m.user}:</span>

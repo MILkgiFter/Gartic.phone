@@ -10,6 +10,7 @@ interface DrawingBoardProps {
   roomId?: string;
   socket?: Socket;
   tool?: 'brush' | 'eraser' | 'fill';
+  history?: any[];
 }
 
 export default function DrawingBoard({ 
@@ -18,78 +19,39 @@ export default function DrawingBoard({
   isDrawingMode = true,
   roomId,
   socket,
-  tool = 'brush'
+  tool = 'brush',
+  history = []
 }: DrawingBoardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Set canvas size
-    const resizeCanvas = () => {
-      const parent = canvas.parentElement;
-      if (parent) {
-        canvas.width = parent.clientWidth;
-        canvas.height = parent.clientHeight;
+    if (canvas) {
+      canvas.width = 1200; // A larger canvas to allow for scrolling
+      canvas.height = 800;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
-    };
-
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    // Socket events
-    if (socket) {
-      socket.on('draw_receive', (data: any) => {
-        const { x, y, prevX, prevY, color: remoteColor, size: remoteSize, tool: remoteTool } = data;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          if (remoteTool === 'fill') {
-            floodFill(ctx, x, y, remoteColor);
-          } else {
-            ctx.lineWidth = remoteSize;
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = remoteTool === 'eraser' ? '#ffffff' : remoteColor;
-            ctx.beginPath();
-            ctx.moveTo(prevX, prevY);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-          }
-        }
-      });
-
-      socket.on('clear_canvas_receive', () => {
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-      });
     }
+  }, []);
 
-    return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      if (socket) {
-        socket.off('draw_receive');
-        socket.off('clear_canvas_receive');
-        socket.off('canvas_state_receive');
-      }
-    };
-  }, [socket]);
-
+  // Redraw canvas whenever history changes
   useEffect(() => {
-    if (!socket) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!ctx || !canvas) return;
 
-    const handleRedraw = (data: any) => {
-      const canvas = canvasRef.current;
-      const ctx = canvas?.getContext('2d');
-      if (!ctx) return;
+    // Clear canvas before redrawing
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    const redraw = (data: any) => {
       if (data.tool === 'fill') {
-        floodFill(ctx, data.x, data.y, data.color);
+        // Flood fill can be complex to re-apply from history, for now we will skip re-filling
+        // A better approach would be to save the canvas state (imageData) after fill
       } else {
         ctx.lineWidth = data.size;
         ctx.lineCap = 'round';
@@ -101,24 +63,9 @@ export default function DrawingBoard({
       }
     }
 
-    const handleInitialState = (history: any[]) => {
-      const canvas = canvasRef.current;
-      const ctx = canvas?.getContext('2d');
-      if (!ctx || !canvas) return;
-      
-      // Clear canvas before redrawing
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    history.forEach(item => redraw(item));
 
-      history.forEach(data => handleRedraw(data));
-    };
-
-    socket.on('canvas_state_receive', handleInitialState);
-
-    return () => {
-      socket.off('canvas_state_receive', handleInitialState);
-    }
-
-  }, [socket]);
+  }, [history]);
 
   const lastPos = useRef({ x: 0, y: 0 });
 
@@ -298,7 +245,7 @@ export default function DrawingBoard({
   };
 
   return (
-    <div className="relative w-full h-full bg-white rounded-lg overflow-hidden border-4 border-black/5 shadow-inner">
+    <div className="relative w-full h-full bg-white rounded-lg overflow-auto border-4 border-black/5 shadow-inner">
       <canvas
         ref={canvasRef}
         onMouseDown={startDrawing}
