@@ -13,7 +13,6 @@ interface DrawingBoardProps {
   history?: any[];
 }
 
-// Utility to generate a simple unique ID
 const generateStrokeId = () => `stroke_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
 export default function DrawingBoard({ 
@@ -35,9 +34,12 @@ export default function DrawingBoard({
     const h = canvas.height;
 
     if (data.tool === 'fill') {
-      // Re-applying flood fill from history is complex and can be inaccurate
-      // A better system would involve snapshotting canvas state, which is too heavy for this app
-      // For now, we'll just ignore fill events in history redrawing to prevent errors
+      // This is a placeholder for a proper flood fill implementation.
+      // For now, we will draw a small circle to indicate where the fill was attempted.
+      ctx.beginPath();
+      ctx.arc(data.x * w, data.y * h, 10, 0, 2 * Math.PI, false);
+      ctx.fillStyle = data.color;
+      ctx.fill();
     } else {
       ctx.lineWidth = data.size;
       ctx.lineCap = 'round';
@@ -49,7 +51,7 @@ export default function DrawingBoard({
     }
   };
 
-  // Effect for resizing and redrawing
+  // Effect for resizing and redrawing history
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -104,29 +106,29 @@ export default function DrawingBoard({
     const coords = getCoords(e);
     if (!canvas || !coords) return;
 
+    const data = {
+      x: coords.x / canvas.width,
+      y: coords.y / canvas.height,
+      color,
+      tool,
+      strokeId: generateStrokeId()
+    };
+
     if (tool === 'fill') {
       if (socket && roomId) {
-        socket.emit('draw', {
-          roomId,
-          data: { 
-            x: coords.x / canvas.width,
-            y: coords.y / canvas.height,
-            color,
-            tool: 'fill'
-          }
-        });
+        socket.emit('draw', { roomId, data });
       }
       return;
     }
 
     setIsDrawing(true);
-    currentStrokeId.current = generateStrokeId(); // Generate a new ID for this stroke
-    lastPos.current = { x: coords.x / canvas.width, y: coords.y / canvas.height };
+    currentStrokeId.current = data.strokeId;
+    lastPos.current = { x: data.x, y: data.y };
   };
 
   const stopDrawing = () => {
     setIsDrawing(false);
-    currentStrokeId.current = null; // End of stroke
+    currentStrokeId.current = null;
   };
 
   const draw = (e: React.MouseEvent | React.TouchEvent) => {
@@ -137,26 +139,29 @@ export default function DrawingBoard({
     const coords = getCoords(e);
     if (!canvas || !coords) return;
 
-    const x_rel = coords.x / canvas.width;
-    const y_rel = coords.y / canvas.height;
+    const data = {
+      x: coords.x / canvas.width,
+      y: coords.y / canvas.height,
+      prevX: lastPos.current.x,
+      prevY: lastPos.current.y,
+      color,
+      size: brushSize,
+      tool,
+      strokeId: currentStrokeId.current
+    };
 
-    if (socket && roomId && currentStrokeId.current) {
-      socket.emit('draw', {
-        roomId,
-        data: { 
-          x: x_rel, 
-          y: y_rel, 
-          prevX: lastPos.current.x, 
-          prevY: lastPos.current.y, 
-          color, 
-          size: brushSize, 
-          tool,
-          strokeId: currentStrokeId.current // Include the stroke ID
-        }
-      });
+    // Draw locally immediately
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      drawFromData(data, ctx, canvas);
     }
 
-    lastPos.current = { x: x_rel, y: y_rel };
+    // Send to server
+    if (socket && roomId && currentStrokeId.current) {
+      socket.emit('draw', { roomId, data });
+    }
+
+    lastPos.current = { x: data.x, y: data.y };
   };
 
   const clearCanvas = () => {
