@@ -14,12 +14,37 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gartic.phone - Draw, Guess, WIN",
-  description: "Play Gartic.phone online and for free. Draw and guess the words as fast as you can! Join on worldwide rooms or create your own.",
+  metadataBase: new URL('https://gartic-phone-omega.vercel.app'), // Replace with your actual domain
+  title: {
+    default: 'Gartic.phone - The Ultimate Drawing and Guessing Game',
+    template: '%s | Gartic.phone',
+  },
+  description: "The free online drawing game where you try to guess the word! Play with friends in public or private rooms. The hilarious alternative to broken telephone.",
+  keywords: ['drawing game', 'guessing game', 'online party game', 'gartic phone', 'broken telephone game', 'free online game', 'play with friends'],
+  openGraph: {
+    title: 'Gartic.phone - The Ultimate Drawing and Guessing Game',
+    description: 'The free online drawing game where you try to guess the word! Hilarious and fun for parties.',
+    url: 'https://gartic-phone-omega.vercel.app', // Replace with your actual domain
+    siteName: 'Gartic.phone',
+    images: [
+      {
+        url: '/og-image.png', // We need to create this image
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Gartic.phone - The Ultimate Drawing and Guessing Game',
+    description: 'The free online drawing game where you try to guess the word! Hilarious and fun for parties.',
+    images: ['/og-image.png'], // We need to create this image
+  },
   icons: {
-    icon: "https://gartic.io/favicon.ico", // Keeping the real favicon URL for now as it's an external resource
+    icon: "/favicon.ico",
   }
-};
 
 export const viewport: Viewport = {
   themeColor: "#0085FF",
