@@ -244,27 +244,27 @@ io.on('connection', (socket) => {
     handleSelectWord(roomId, socket.id, word);
   });
 
-  socket.on('draw', ({ roomId, data }) => {
+  socket.on('draw', ({ roomId, shape }) => {
     const room = rooms.get(roomId);
     if (room) {
-      room.drawingHistory.push(data);
+      room.drawingHistory.push(shape);
+      io.to(roomId).emit('history_update', room.drawingHistory);
     }
-    socket.to(roomId).emit('draw_receive', data);
   });
 
   socket.on('clear_canvas', (roomId) => {
     const room = rooms.get(roomId);
     if (room) {
       room.drawingHistory = [];
+      io.to(roomId).emit('history_update', room.drawingHistory);
     }
-    socket.to(roomId).emit('clear_canvas_receive');
   });
 
   socket.on('undo', (roomId) => {
     const room = rooms.get(roomId);
     if (room && room.drawingHistory.length > 0) {
       room.drawingHistory.pop();
-      io.to(roomId).emit('canvas_state_receive', room.drawingHistory);
+      io.to(roomId).emit('history_update', room.drawingHistory);
     }
   });
 
@@ -315,36 +315,37 @@ io.on('connection', (socket) => {
       const playerIndex = room.players.findIndex(p => p.id === socket.id);
       if (playerIndex !== -1) {
         const player = room.players[playerIndex];
-        player.disconnected = true;
         
         const t = translations[room.language || 'English'];
         io.to(roomId).emit('message', { user: 'System', text: `${player.nickname} ${t.leftRoom}` });
         
-        // Wait 30 seconds before removing player completely
-        setTimeout(() => {
-          const pIndex = room.players.findIndex(p => p.userId === player.userId);
-          if (pIndex !== -1 && room.players[pIndex].disconnected) {
-            room.players.splice(pIndex, 1);
-            io.to(roomId).emit('update_players', room.players);
-            
-            if (room.players.filter(p => !p.disconnected).length < 2) {
-              stopTimer(room);
-              room.gameState = 'waiting';
-              io.to(roomId).emit('game_state_update', { gameState: 'waiting' });
-            } else if (pIndex === room.currentDrawerIndex) {
-              room.currentDrawerIndex--;
-              startNewRound(roomId);
-            }
-            
-            if (room.players.length === 0) {
-              stopTimer(room);
-              rooms.delete(roomId);
-            }
-          }
-        }, 30000); // 30 second grace period for reconnection
+        // Instantly remove player and update game state
+        room.players.splice(playerIndex, 1);
         
-        io.to(roomId).emit('update_players', room.players);
-        break;
+        if (room.players.length === 0) {
+          // If the room is empty, delete it.
+          stopTimer(room);
+          rooms.delete(roomId);
+          console.log(`Room ${roomId} deleted as it was empty.`);
+        } else {
+          // If room is not empty, update clients and check game state
+          io.to(roomId).emit('update_players', room.players);
+          
+          if (room.players.length < 2 && room.gameState !== 'waiting') {
+            stopTimer(room);
+            room.gameState = 'waiting';
+            io.to(roomId).emit('game_state_update', { gameState: 'waiting' });
+          } else if (playerIndex === room.currentDrawerIndex) {
+            // If the drawer left, start a new round.
+            room.currentDrawerIndex--; // Adjust index for the next round calculation.
+            startNewRound(roomId);
+          } else if (playerIndex < room.currentDrawerIndex) {
+            // If a player before the drawer left, the drawer's index shifts.
+            room.currentDrawerIndex--;
+          }
+        }
+
+        break; // Player found and handled, exit loop.
       }
     }
   });
@@ -355,24 +356,3 @@ server.listen(PORT, () => {
   console.log(`Socket server running on port ${PORT}`);
 });
 
-// Cleanup interval for inactive rooms
-setInterval(() => {
-  const now = Date.now();
-  for (const [roomId, room] of rooms.entries()) {
-    const allDisconnected = room.players.every(p => p.disconnected);
-    if (allDisconnected && room.players.length > 0) {
-      // If all players are disconnected, mark the room for deletion
-      if (!room.inactiveSince) {
-        room.inactiveSince = now;
-      }
-      // If inactive for more than a minute, delete
-      if (now - room.inactiveSince > 60000) {
-        console.log(`Deleting inactive room ${roomId}`);
-        rooms.delete(roomId);
-      }
-    } else {
-      // If players are active, reset the inactivity marker
-      delete room.inactiveSince;
-    }
-  }
-}, 300000); // Check every 5 minutes

@@ -59,7 +59,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-background text-foreground">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-background text-foreground">
       {/* Header with logo */}
       <header className="mt-12 mb-8">
         <div className="flex flex-col items-center gap-2">
@@ -71,7 +71,7 @@ export default function Home() {
       </header>
 
       <main className="w-full max-w-lg px-4">
-        <div className="bg-card-bg rounded-2xl shadow-xl overflow-hidden border border-black/5">
+        <div className="bg-card-bg rounded-2xl shadow-2xl border border-white/10">
           {/* Main Play Area */}
           <div className="p-8 flex flex-col gap-6">
             <h2 className="text-2xl font-bold text-center">QUICK PLAY</h2>

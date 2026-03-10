@@ -90,12 +90,8 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
       setTimeout(() => setWinner(null), 5000);
     });
 
-    socket.on('canvas_state_receive', (history) => {
+    socket.on('history_update', (history) => {
       setDrawingHistory(history);
-    });
-
-    socket.on('draw_receive', (data) => {
-      setDrawingHistory(prev => [...prev, data]);
     });
 
     socket.on('clear_canvas_receive', () => {

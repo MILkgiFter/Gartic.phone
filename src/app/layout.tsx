@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 
+import { Providers } from "./providers";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -44,8 +46,8 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/favicon.ico",
-  }
-
+  },
+};
 export const viewport: Viewport = {
   themeColor: "#0085FF",
   width: "device-width",
@@ -66,7 +68,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
