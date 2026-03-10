@@ -109,7 +109,7 @@ export default function Home() {
                 PLAY!
               </button>
               <Link href="/rooms">
-                <button className="w-full bg-secondary hover:bg-secondary-hover text-white font-black py-4 rounded-xl text-xl shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                <button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-xl text-xl shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]">
                   ROOMS
                 </button>
               </Link>
