@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://gartic-phone-omega.vercel.app/sitemap.xml
+Sitemap: https://garticphone.space/sitemap.xml

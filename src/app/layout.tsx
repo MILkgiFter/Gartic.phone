@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://gartic-phone-omega.vercel.app'), // Replace with your actual domain
+  metadataBase: new URL('https://garticphone.space'), // Replace with your actual domain
   title: {
     default: 'Gartic.phone - The Ultimate Drawing and Guessing Game',
     template: '%s | Gartic.phone',
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Gartic.phone - The Ultimate Drawing and Guessing Game',
     description: 'The free online drawing game where you try to guess the word! Hilarious and fun for parties.',
-    url: 'https://gartic-phone-omega.vercel.app', // Replace with your actual domain
+    url: 'https://garticphone.space', // Replace with your actual domain
     siteName: 'Gartic.phone',
     images: [
       {
