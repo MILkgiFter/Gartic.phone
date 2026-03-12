@@ -317,6 +317,9 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
               <button onClick={() => setTool('fill')} disabled={!isDrawer || gameState !== 'drawing'} className={`p-2 rounded-lg transition-colors ${tool === 'fill' ? 'bg-primary text-white' : 'hover:bg-black/10'}`} title="Flood Fill">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3a1 1 0 00-1 1v3.586l-3.293-3.293a1 1 0 10-1.414 1.414L10.586 9H7a1 1 0 00-1 1c0 4.418 3.582 8 8 8s8-3.582 8-8a1 1 0 00-1-1h-3.586l4.293-4.293a1 1 0 10-1.414-1.414L13 7.586V4a1 1 0 00-1-1z" /></svg>
               </button>
+              <button onClick={() => socketRef.current?.emit('clear_canvas', roomId)} disabled={!isDrawer || gameState !== 'drawing'} className="p-2 rounded-lg transition-colors hover:bg-black/10 disabled:opacity-30" title="Clear Canvas">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </button>
               <button onClick={() => socketRef.current?.emit('undo', roomId)} disabled={!isDrawer || gameState !== 'drawing' || drawingHistory.length === 0} className="p-2 rounded-lg transition-colors hover:bg-black/10 disabled:opacity-30" title="Undo">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l4-4m-4 4l4 4" /></svg>
               </button>

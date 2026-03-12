@@ -18,14 +18,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL('https://garticphone.space'), // Replace with your actual domain
   title: {
-    default: 'Gartic.phone - The Ultimate Drawing and Guessing Game',
+    default: 'Gartic.phone - лучшая игра в рисование и угадывание',
     template: '%s | Gartic.phone',
   },
-  description: "The free online drawing game where you try to guess the word! Play with friends in public or private rooms. The hilarious alternative to broken telephone.",
-  keywords: ['drawing game', 'guessing game', 'online party game', 'gartic phone', 'broken telephone game', 'free online game', 'play with friends'],
+  description: "Бесплатная онлайн-игра в рисование, в которой вы пытаетесь угадать слово! Играйте с друзьями в публичных или приватных комнатах. Веселая альтернатива испорченному телефону.",
+  keywords: ['drawing game', 'guessing game', 'online party game', 'gartic phone', 'broken telephone game', 'free online game', 'play with friends', 'рисование онлайн', 'игра угадай слово', 'веселые игры для компании', 'игры для вечеринок', 'сломанный телефон игра', 'онлайн игра с друзьями', 'бесплатные онлайн игры', 'браузерная игра', 'творческая игра', 'игра в слова'],
   openGraph: {
-    title: 'Gartic.phone - The Ultimate Drawing and Guessing Game',
-    description: 'The free online drawing game where you try to guess the word! Hilarious and fun for parties.',
+    title: 'Gartic.phone - лучшая игра в рисование и угадывание',
+    description: 'Бесплатная онлайн-игра в рисование, в которой вы пытаетесь угадать слово! Весело и забавно для вечеринок.',
     url: 'https://garticphone.space', // Replace with your actual domain
     siteName: 'Gartic.phone',
     images: [
@@ -35,13 +35,13 @@ export const metadata: Metadata = {
         height: 630,
       },
     ],
-    locale: 'en_US',
+    locale: 'ru_RU',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Gartic.phone - The Ultimate Drawing and Guessing Game',
-    description: 'The free online drawing game where you try to guess the word! Hilarious and fun for parties.',
+    title: 'Gartic.phone - лучшая игра в рисование и угадывание',
+    description: 'Бесплатная онлайн-игра в рисование, в которой вы пытаетесь угадать слово! Весело и забавно для вечеринок.',
     images: ['/og-image.png'], // We need to create this image
   },
   icons: {
