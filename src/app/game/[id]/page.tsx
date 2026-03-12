@@ -66,6 +66,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
     });
 
     socket.on('round_start', (data: any) => {
+      setDrawingHistory([]); // Clear canvas for the new round
       setGameState(data.gameState);
       setCurrentDrawerId(data.drawerId);
       setWordOptions([]);
