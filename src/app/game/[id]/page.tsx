@@ -66,7 +66,10 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
     });
 
     socket.on('round_start', (data: any) => {
-      setDrawingHistory([]); // Clear canvas for the new round
+      if (socketRef.current?.id === data.drawerId) { // Only the new drawer clears the canvas for everyone
+        socketRef.current?.emit('clear_canvas', roomId);
+      }
+      setDrawingHistory([]); // Optimistically clear for everyone immediately
       setGameState(data.gameState);
       setCurrentDrawerId(data.drawerId);
       setWordOptions([]);
