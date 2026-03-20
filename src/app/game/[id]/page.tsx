@@ -269,8 +269,8 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
           )}
         </div>
 
-        {/* Fixed Toolbar */}
-        <div className="fixed bottom-2 left-4 right-4 z-40">
+        {/* Toolbar */}
+        <div className="w-full pt-2">
           <div className="sketchy-container flex flex-col items-center gap-2 bg-white/80 backdrop-blur-sm p-2">
             {/* Color Palette */}
             <div className="flex flex-wrap gap-1 justify-center">
