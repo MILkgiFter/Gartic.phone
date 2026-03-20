@@ -71,29 +71,29 @@ export default function Home() {
       </header>
 
       <main className="w-full max-w-lg px-4">
-        <div className="bg-card-bg rounded-2xl shadow-2xl border border-white/10">
+        <div className="sketchy-container">
           {/* Main Play Area */}
-          <div className="p-8 flex flex-col gap-6">
-            <h2 className="text-2xl font-bold text-center">QUICK PLAY</h2>
+          <div className="p-2 flex flex-col gap-6">
+            <h2 className="text-3xl font-black text-center">QUICK PLAY</h2>
             
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold uppercase opacity-50 px-1">Nickname:</label>
+                <label className="text-sm font-bold uppercase opacity-60 px-1">Nickname:</label>
                 <input 
                   type="text" 
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   placeholder="User5320" 
-                  className="w-full bg-background border-2 border-black/5 rounded-xl px-4 py-3 font-bold focus:outline-none focus:border-primary transition-colors"
+                  className="sketchy-input"
                 />
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold uppercase opacity-50 px-1">Language:</label>
+                <label className="text-sm font-bold uppercase opacity-60 px-1">Language:</label>
                 <select 
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full bg-background border-2 border-black/5 rounded-xl px-4 py-3 font-bold focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer"
+                  className="sketchy-input appearance-none cursor-pointer"
                 >
                   <option>English</option>
                   <option>Русский</option>
@@ -104,12 +104,12 @@ export default function Home() {
             <div className="flex flex-col gap-3 mt-4">
               <button 
                 onClick={handlePlay}
-                className="w-full bg-primary hover:bg-primary-hover text-white font-black py-4 rounded-xl text-xl shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                className="sketchy-btn w-full text-2xl"
               >
                 PLAY!
               </button>
               <Link href="/rooms">
-                <button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-xl text-xl shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                <button className="sketchy-btn secondary w-full text-2xl">
                   ROOMS
                 </button>
               </Link>

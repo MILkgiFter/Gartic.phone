@@ -16,6 +16,7 @@
   --color-card-bg: var(--card-bg);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-kalam: var(--font-kalam);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -31,5 +32,56 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--font-kalam), cursive;
+}
+
+.sketchy-btn {
+  border: 2px solid var(--foreground);
+  border-radius: 15% 5% 20% 10%/10% 20% 5% 15%;
+  transition: all 0.2s;
+  padding: 10px 20px;
+  font-weight: bold;
+  background-color: var(--primary);
+  color: white;
+  box-shadow: 3px 3px 0px 0px var(--foreground);
+}
+
+.sketchy-btn:hover {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px 0px var(--foreground);
+}
+
+.sketchy-btn.secondary {
+    background-color: var(--secondary, #ff9800);
+}
+
+.sketchy-container {
+    border: 3px solid var(--foreground);
+    border-radius: 2% 6% 3% 4% / 5% 2% 7% 3%;
+    background-color: var(--card-bg);
+    padding: 1.5rem;
+    box-shadow: 5px 5px 0px 0px var(--foreground);
+}
+
+.sketchy-input {
+  border: 2px solid var(--foreground);
+  border-radius: 10% 3% 12% 4%/8% 11% 4% 9%;
+  background-color: var(--background);
+  padding: 12px;
+  font-weight: bold;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.sketchy-input:focus {
+    outline: none;
+    transform: scale(1.02);
+}
+
+.sketchy-popup {
+    border: 2px solid var(--foreground);
+    border-radius: 4% 4% 6% 3% / 3% 5% 3% 7%;
+    background-color: var(--background);
+    padding: 1rem 1.5rem;
+    box-shadow: 3px 3px 0px 0px var(--foreground);
 }

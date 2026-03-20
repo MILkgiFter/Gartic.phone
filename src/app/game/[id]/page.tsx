@@ -149,28 +149,28 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
       {/* Overlays - Placed at the top level to ensure they are on top of everything */}
       {winner && (
         <div className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center">
-          <div className="bg-card-bg p-12 rounded-3xl shadow-2xl flex flex-col items-center gap-6 border-4 border-primary animate-bounce">
+          <div className="sketchy-container p-12 animate-bounce">
             <h2 className="text-5xl font-black italic text-primary">{t.gameOver}</h2>
             <div className="flex flex-col items-center">
-              <span className="text-xl opacity-70 uppercase font-bold">{t.winnerIs}</span>
-              <span className="text-4xl font-black">{winner}</span>
+              <span className="text-3xl opacity-70 uppercase font-bold">{t.winnerIs}</span>
+              <span className="text-6xl font-black">{winner}</span>
             </div>
           </div>
         </div>
       )}
       {isDrawer && gameState === 'selecting_word' && wordOptions.length > 0 && (
         <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card-bg p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-6 max-w-sm w-full border border-white/10">
+          <div className="sketchy-container flex flex-col items-center gap-6 max-w-sm w-full">
             <div className="flex flex-col items-center">
-              <h2 className="text-2xl font-black italic tracking-tight text-center uppercase">{t.chooseWord}</h2>
-              <span className="text-primary font-bold text-xl">{timer}s</span>
+              <h2 className="text-4xl font-black tracking-tight text-center uppercase">{t.chooseWord}</h2>
+              <span className="text-primary font-bold text-3xl">{timer}s</span>
             </div>
             <div className="flex flex-col gap-3 w-full">
               {wordOptions.map((word) => (
                 <button
                   key={word}
                   onClick={() => handleSelectWord(word)}
-                  className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-xl text-xl shadow-lg transition-all transform hover:scale-105 active:scale-95"
+                  className="sketchy-btn w-full text-2xl"
                 >
                   {word}
                 </button>
@@ -181,12 +181,12 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
       )}
       {gameState === 'waiting' && (
         <div className="absolute inset-0 z-40 bg-black/20 flex flex-col items-center justify-center gap-4">
-          <div className="bg-white/90 px-6 py-3 rounded-full font-bold shadow-xl uppercase text-center">
+          <div className="sketchy-popup uppercase">
             {t.waitingPlayers}
           </div>
           <button 
             onClick={handleStartGame}
-            className="bg-primary hover:bg-primary-hover text-white px-8 py-3 rounded-xl font-black shadow-2xl transition-all transform hover:scale-105 active:scale-95 uppercase"
+            className="sketchy-btn uppercase text-xl"
           >
             {t.startSolo}
           </button>
@@ -194,26 +194,26 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
       )}
       {gameState === 'selecting_word' && !isDrawer && (
         <div className="absolute inset-0 z-40 bg-black/10 flex items-center justify-center">
-          <div className="bg-white/90 px-6 py-3 rounded-full font-bold shadow-xl flex items-center gap-3 uppercase text-center">
+          <div className="sketchy-popup flex items-center gap-3 uppercase">
             <span>{t.drawerChoosing}</span>
-            <span className="text-primary">{timer}s</span>
+            <span className="text-primary text-2xl">{timer}s</span>
           </div>
         </div>
       )}
 
       {/* Left Sidebar (Players) - Hidden on mobile, drawer behavior */}
-      <aside className={`absolute lg:relative z-30 w-64 bg-card-bg border-r border-black/5 flex-col h-full transition-transform duration-300 ease-in-out transform ${isPlayersVisible ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:flex`}>
-        <div className="p-4 border-b border-black/5 font-bold flex justify-between items-center">
+      <aside className={`absolute lg:relative z-30 w-64 sketchy-container flex-col h-full transition-transform duration-300 ease-in-out transform ${isPlayersVisible ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:flex`}>
+        <div className="p-4 border-b-2 border-foreground font-bold flex justify-between items-center">
           <div className="flex flex-col">
-            <span className="text-xs opacity-50 uppercase">{t.players}</span>
-            <span>{players.length}/10</span>
+            <span className="text-lg opacity-50 uppercase">{t.players}</span>
+            <span className="text-2xl">{players.length}/10</span>
           </div>
           <button onClick={() => setIsPlayersVisible(false)} className="lg:hidden p-2 rounded-full -mr-2">
              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
           <button 
             onClick={handleExit}
-            className="hidden lg:block bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white px-3 py-1 rounded-lg text-xs font-bold transition-all border border-red-500/20"
+            className="sketchy-btn secondary uppercase text-xs"
           >
             {t.exit}
           </button>
@@ -222,10 +222,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
            {players.map((player) => (
             <div 
               key={player.id} 
-              className={`flex items-center gap-3 p-2 rounded-lg border transition-colors ${
-                player.id === socketRef.current?.id ? 'bg-primary/10 border-primary/20' : 'border-transparent'
-              } ${player.id === currentDrawerId ? 'ring-2 ring-secondary' : ''} ${player.disconnected ? 'opacity-40 grayscale' : ''}`}
-            >
+              className={`flex items-center gap-3 p-2 transition-colors sketchy-popup ${player.disconnected ? 'opacity-40 grayscale' : ''}`}>
               <div className="relative">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${player.disconnected ? 'bg-gray-400' : 'bg-primary'}`}>
                   {player.nickname[0].toUpperCase()}
@@ -237,8 +234,8 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
                 )}
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-sm truncate max-w-[120px]">{player.nickname}</span>
-                <span className="text-xs opacity-50">{player.points} {t.points}</span>
+                <span className="font-bold text-lg truncate max-w-[120px]">{player.nickname}</span>
+                <span className="text-md opacity-50">{player.points} {t.points}</span>
               </div>
             </div>
           ))}
@@ -246,7 +243,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
         <div className="p-2 lg:hidden border-t border-black/5">
             <button 
               onClick={handleExit}
-              className="w-full bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white px-3 py-2 rounded-lg text-sm font-bold transition-all border border-red-500/20"
+              className="sketchy-btn secondary w-full"
             >
               {t.exit}
             </button>
@@ -256,22 +253,22 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
       {/* Center: Main drawing area and tools */}
       <main className="flex-1 flex flex-col gap-2 md:gap-4 p-2 md:p-4 min-h-0">
         {/* Top bar for mobile */}
-        <div className="lg:hidden flex justify-between items-center bg-card-bg p-2 rounded-xl shadow-sm border border-black/5">
+        <div className="lg:hidden flex justify-between items-center sketchy-container p-2">
             <button onClick={() => setIsPlayersVisible(true)} className="p-2">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
             <div className="flex flex-col items-center">
-              <span className="text-xs font-bold opacity-40 uppercase">
+              <span className="text-md font-bold opacity-60 uppercase">
                 {gameState === 'drawing' ? t.guessWord : t.roomId}
               </span>
-              <span className="font-mono font-bold text-sm">
+              <span className="font-mono font-bold text-lg">
                 {gameState === 'drawing' ? '???'.padEnd(roomId.length, '_') : roomId}
               </span>
             </div>
              {gameState === 'drawing' && (
-              <div className="flex flex-col items-center bg-primary/10 px-3 py-1 rounded-lg border border-primary/20">
-                <span className="text-[10px] font-bold text-primary uppercase leading-none">{t.time}</span>
-                <span className="text-lg font-black text-primary leading-none">{timer}s</span>
+              <div className="flex flex-col items-center sketchy-popup">
+                <span className="text-sm font-bold text-primary uppercase leading-none">{t.time}</span>
+                <span className="text-2xl font-black text-primary leading-none">{timer}s</span>
               </div>
             )}
         </div>
@@ -283,20 +280,20 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
         )}
 
         {/* Toolbar for Desktop */}
-        <div className="hidden lg:flex bg-card-bg rounded-xl shadow-sm p-4 justify-between items-center border border-black/5">
+        <div className="hidden lg:flex sketchy-container p-4 justify-between items-center">
             <div className="flex items-center gap-6">
               <div className="flex flex-col">
-                <span className="text-xs font-bold opacity-40 uppercase">
+                <span className="text-md font-bold opacity-60 uppercase">
                   {gameState === 'drawing' ? t.guessWord : t.roomId}
                 </span>
-                <span className="font-mono font-bold">
+                <span className="font-mono font-bold text-xl">
                   {gameState === 'drawing' ? '???' : roomId}
                 </span>
               </div>
               {gameState === 'drawing' && (
-                <div className="flex flex-col items-center bg-primary/10 px-4 py-1 rounded-lg border border-primary/20">
-                  <span className="text-[10px] font-bold text-primary uppercase leading-none mb-1">{t.time}</span>
-                  <span className="text-xl font-black text-primary leading-none">{timer}s</span>
+                <div className="flex flex-col items-center sketchy-popup">
+                  <span className="text-sm font-bold text-primary uppercase leading-none mb-1">{t.time}</span>
+                  <span className="text-2xl font-black text-primary leading-none">{timer}s</span>
                 </div>
               )}
             </div>
@@ -306,25 +303,25 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
                   key={c}
                   onClick={() => { setColor(c); if (tool === 'eraser') setTool('brush'); }}
                   disabled={!isDrawer || gameState !== 'drawing'}
-                  className={`w-6 h-6 rounded-md border-2 transition-transform hover:scale-110 disabled:opacity-30 disabled:hover:scale-100 ${color === c && tool !== 'eraser' ? 'border-primary scale-110' : 'border-black/10'}`}
+                  className={`w-6 h-6 transition-transform hover:scale-110 disabled:opacity-30 disabled:hover:scale-100 sketchy-popup ${color === c && tool !== 'eraser' ? 'border-primary scale-110 border-2' : 'border-black/10'}`}
                   style={{ backgroundColor: c }}
                 />
               ))}
             </div>
-            <div className="flex items-center gap-2 bg-black/5 p-2 rounded-lg">
-               <button onClick={() => setTool('brush')} disabled={!isDrawer || gameState !== 'drawing'} className={`p-2 rounded-lg transition-colors ${tool === 'brush' ? 'bg-primary text-white' : 'hover:bg-black/10'}`} title="Brush">
+            <div className="flex items-center gap-1 sketchy-container p-1">
+               <button onClick={() => setTool('brush')} disabled={!isDrawer || gameState !== 'drawing'} className={`sketchy-btn ${tool === 'brush' ? 'bg-primary text-white' : ''}`} title="Brush">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
               </button>
-              <button onClick={() => setTool('eraser')} disabled={!isDrawer || gameState !== 'drawing'} className={`p-2 rounded-lg transition-colors ${tool === 'eraser' ? 'bg-primary text-white' : 'hover:bg-black/10'}`} title="Eraser">
+              <button onClick={() => setTool('eraser')} disabled={!isDrawer || gameState !== 'drawing'} className={`sketchy-btn ${tool === 'eraser' ? 'bg-primary text-white' : ''}`} title="Eraser">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 01-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z" /></svg>
               </button>
-              <button onClick={() => setTool('fill')} disabled={!isDrawer || gameState !== 'drawing'} className={`p-2 rounded-lg transition-colors ${tool === 'fill' ? 'bg-primary text-white' : 'hover:bg-black/10'}`} title="Flood Fill">
+              <button onClick={() => setTool('fill')} disabled={!isDrawer || gameState !== 'drawing'} className={`sketchy-btn ${tool === 'fill' ? 'bg-primary text-white' : ''}`} title="Flood Fill">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3a1 1 0 00-1 1v3.586l-3.293-3.293a1 1 0 10-1.414 1.414L10.586 9H7a1 1 0 00-1 1c0 4.418 3.582 8 8 8s8-3.582 8-8a1 1 0 00-1-1h-3.586l4.293-4.293a1 1 0 10-1.414-1.414L13 7.586V4a1 1 0 00-1-1z" /></svg>
               </button>
-              <button onClick={() => socketRef.current?.emit('clear_canvas', roomId)} disabled={!isDrawer || gameState !== 'drawing'} className="p-2 rounded-lg transition-colors hover:bg-black/10 disabled:opacity-30" title="Clear Canvas">
+              <button onClick={() => socketRef.current?.emit('clear_canvas', roomId)} disabled={!isDrawer || gameState !== 'drawing'} className="sketchy-btn" title="Clear Canvas">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
               </button>
-              <button onClick={() => socketRef.current?.emit('undo', roomId)} disabled={!isDrawer || gameState !== 'drawing' || drawingHistory.length === 0} className="p-2 rounded-lg transition-colors hover:bg-black/10 disabled:opacity-30" title="Undo">
+              <button onClick={() => socketRef.current?.emit('undo', roomId)} disabled={!isDrawer || gameState !== 'drawing' || drawingHistory.length === 0} className="sketchy-btn" title="Undo">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l4-4m-4 4l4 4" /></svg>
               </button>
             </div>
@@ -335,36 +332,36 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
         </div>
 
         {/* Drawing Board */}
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 sketchy-container">
           {socketRef.current && (
             <DrawingBoard color={color} brushSize={brushSize} roomId={roomId} socket={socketRef.current} isDrawingMode={isDrawer && gameState === 'drawing'} tool={tool} history={drawingHistory} />
           )}
         </div>
 
          {/* Toolbar for Mobile */}
-        <div className="lg:hidden flex flex-wrap gap-2 p-2 bg-card-bg rounded-xl shadow-sm border border-black/5 justify-center">
+        <div className="lg:hidden flex flex-wrap gap-2 p-2 sketchy-container justify-center">
             <div className="flex gap-1 flex-wrap justify-center">
               {colors.map(c => (
                 <button 
                   key={c}
                   onClick={() => { setColor(c); if (tool === 'eraser') setTool('brush'); }}
                   disabled={!isDrawer || gameState !== 'drawing'}
-                  className={`w-7 h-7 rounded-md border-2 ${color === c && tool !== 'eraser' ? 'border-primary scale-110' : 'border-black/10'}`}
+                  className={`w-7 h-7 sketchy-popup ${color === c && tool !== 'eraser' ? 'border-primary scale-110 border-2' : 'border-black/10'}`}
                   style={{ backgroundColor: c }}
                 />
               ))}
             </div>
-            <div className="flex items-center gap-2 bg-black/5 p-1 rounded-lg">
-               <button onClick={() => setTool('brush')} disabled={!isDrawer || gameState !== 'drawing'} className={`p-2 rounded-lg ${tool === 'brush' ? 'bg-primary text-white' : ''}`} title="Brush">
+            <div className="flex items-center gap-2 sketchy-container p-1">
+               <button onClick={() => setTool('brush')} disabled={!isDrawer || gameState !== 'drawing'} className={`sketchy-btn ${tool === 'brush' ? 'bg-primary text-white' : ''}`} title="Brush">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
               </button>
-              <button onClick={() => setTool('eraser')} disabled={!isDrawer || gameState !== 'drawing'} className={`p-2 rounded-lg ${tool === 'eraser' ? 'bg-primary text-white' : ''}`} title="Eraser">
+              <button onClick={() => setTool('eraser')} disabled={!isDrawer || gameState !== 'drawing'} className={`sketchy-btn ${tool === 'eraser' ? 'bg-primary text-white' : ''}`} title="Eraser">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 01-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z" /></svg>
               </button>
-              <button onClick={() => setTool('fill')} disabled={!isDrawer || gameState !== 'drawing'} className={`p-2 rounded-lg ${tool === 'fill' ? 'bg-primary text-white' : ''}`} title="Flood Fill">
+              <button onClick={() => setTool('fill')} disabled={!isDrawer || gameState !== 'drawing'} className={`sketchy-btn ${tool === 'fill' ? 'bg-primary text-white' : ''}`} title="Flood Fill">
                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3a1 1 0 00-1 1v3.586l-3.293-3.293a1 1 0 10-1.414 1.414L10.586 9H7a1 1 0 00-1 1c0 4.418 3.582 8 8 8s8-3.582 8-8a1 1 0 00-1-1h-3.586l4.293-4.293a1 1 0 10-1.414-1.414L13 7.586V4a1 1 0 00-1-1z" /></svg>
               </button>
-               <button onClick={() => socketRef.current?.emit('undo', roomId)} disabled={!isDrawer || gameState !== 'drawing' || drawingHistory.length === 0} className="p-2 rounded-lg hover:bg-black/10 disabled:opacity-30" title="Undo">
+               <button onClick={() => socketRef.current?.emit('undo', roomId)} disabled={!isDrawer || gameState !== 'drawing' || drawingHistory.length === 0} className="sketchy-btn" title="Undo">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l4-4m-4 4l4 4" /></svg>
               </button>
             </div>
@@ -373,30 +370,30 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
       </main>
 
       {/* Right Sidebar (Chat) - Hidden on mobile */}
-      <aside className="w-80 bg-card-bg border-l border-black/5 flex-col h-full hidden lg:flex">
-        <div className="p-4 border-b border-black/5 font-bold uppercase">{t.chat}</div>
+      <aside className="w-80 sketchy-container flex-col h-full hidden lg:flex">
+        <div className="p-4 border-b-2 border-foreground font-bold uppercase text-2xl">{t.chat}</div>
         <div className="flex-1 overflow-y-auto p-4 flex flex-col-reverse gap-2">
            {[...messages].reverse().map((m, i) => (
-            <div key={i} className={`text-sm ${m.user === 'System' ? 'italic opacity-50' : ''} ${m.isCorrect ? 'text-green-600 font-bold' : ''}`}>
+            <div key={i} className={`text-lg ${m.user === 'System' ? 'italic opacity-50' : ''} ${m.isCorrect ? 'text-green-600 font-bold' : ''}`}>
               <span className="font-bold mr-2">{m.user}:</span>
               <span>{m.text}</span>
             </div>
           ))}
         </div>
-        <form onSubmit={handleSendMessage} className="p-4 border-t border-black/5">
+        <form onSubmit={handleSendMessage} className="p-4 border-t-2 border-foreground">
           <input 
             type="text" 
             value={guess}
             onChange={(e) => setGuess(e.target.value)}
             disabled={isDrawer && gameState === 'drawing'}
             placeholder={isDrawer && gameState === 'drawing' ? t.youAreDrawing : t.typeGuess}
-            className="w-full bg-background border border-black/5 rounded-lg px-4 py-2 focus:outline-none focus:border-primary transition-colors font-medium disabled:opacity-50"
+            className="sketchy-input"
           />
         </form>
       </aside>
 
       {/* Mobile-only Chat - This is not a drawer, but a visible part of the layout */}
-       <div className="lg:hidden flex flex-col bg-card-bg border-t border-black/5">
+       <div className="lg:hidden flex flex-col sketchy-container">
           <div className="overflow-y-auto p-4 flex flex-col-reverse gap-2 h-20">
              {[...messages].slice(0, 4).map((m, i) => (
               <div key={i} className={`text-sm ${m.user === 'System' ? 'italic opacity-50' : ''} ${m.isCorrect ? 'text-green-600 font-bold' : ''}`}>
@@ -405,14 +402,14 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
               </div>
             ))}
           </div>
-          <form onSubmit={handleSendMessage} className="p-4 border-t border-black/5">
+          <form onSubmit={handleSendMessage} className="p-4 border-t-2 border-foreground">
             <input 
               type="text" 
               value={guess}
               onChange={(e) => setGuess(e.target.value)}
               disabled={isDrawer && gameState === 'drawing'}
               placeholder={isDrawer ? t.youAreDrawing : t.typeGuess}
-              className="w-full bg-background border border-black/5 rounded-lg px-4 py-2 focus:outline-none focus:border-primary transition-colors font-medium disabled:opacity-50"
+              className="sketchy-input"
             />
           </form>
         </div>

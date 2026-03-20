@@ -25,6 +25,45 @@ export default function DrawingBoard({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const currentPathRef = useRef<Array<{x: number, y: number}>>([]);
+  const historyRef = useRef(history);
+
+  useEffect(() => {
+    historyRef.current = history;
+    redrawCanvas();
+  }, [history]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleDrawReceive = (shape: any) => {
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext('2d');
+      if (ctx && canvas) {
+        drawShape(shape, ctx, canvas);
+        historyRef.current.push(shape);
+      }
+    };
+
+    const handleHistoryUpdate = (newHistory: any[]) => {
+      historyRef.current = newHistory;
+      redrawCanvas();
+    };
+
+    const handleClearCanvas = () => {
+      historyRef.current = [];
+      redrawCanvas();
+    };
+
+    socket.on('draw_receive', handleDrawReceive);
+    socket.on('history_update', handleHistoryUpdate);
+    socket.on('clear_canvas_receive', handleClearCanvas);
+
+    return () => {
+      socket.off('draw_receive', handleDrawReceive);
+      socket.off('history_update', handleHistoryUpdate);
+      socket.off('clear_canvas_receive', handleClearCanvas);
+    };
+  }, [socket]);
 
   const drawShape = (shape: any, ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     if (shape.type === 'path') {
@@ -54,7 +93,7 @@ export default function DrawingBoard({
 
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    history.forEach(shape => drawShape(shape, ctx, canvas));
+    historyRef.current.forEach(shape => drawShape(shape, ctx, canvas));
   };
 
   useEffect(() => {
@@ -73,9 +112,7 @@ export default function DrawingBoard({
     return () => window.removeEventListener('resize', resizeCanvas);
   }, []);
 
-  useEffect(() => {
-    redrawCanvas();
-  }, [history]);
+
 
 
   const getCoords = (e: React.MouseEvent | React.TouchEvent): {x: number, y: number} | null => {

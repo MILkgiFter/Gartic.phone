@@ -248,7 +248,7 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomId);
     if (room) {
       room.drawingHistory.push(shape);
-      io.to(roomId).emit('history_update', room.drawingHistory);
+      socket.broadcast.to(roomId).emit('draw_receive', shape);
     }
   });
 
