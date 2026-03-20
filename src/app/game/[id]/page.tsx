@@ -270,15 +270,10 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
         </div>
 
         {/* Fixed Toolbar */}
-        <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-40 w-auto">
-          <div className="sketchy-container flex items-center gap-2 bg-white/80 backdrop-blur-sm p-2">
-            {/* Player List Toggle for Mobile */}
-            <button onClick={() => setIsPlayersVisible(!isPlayersVisible)} className="sketchy-btn lg:hidden !p-2">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.124-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.124-1.283.356-1.857m0 0a3.002 3.002 0 014.288 0M12 15a4 4 0 100-8 4 4 0 000 8z" /></svg>
-            </button>
-
+        <div className="fixed bottom-2 left-4 right-4 z-40">
+          <div className="sketchy-container flex flex-col items-center gap-2 bg-white/80 backdrop-blur-sm p-2">
             {/* Color Palette */}
-            <div className="flex flex-wrap gap-1 w-64">
+            <div className="flex flex-wrap gap-1 justify-center">
               {colors.map(c => (
                 <button
                   key={c}
@@ -290,33 +285,41 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
               ))}
             </div>
 
-            {/* Tool Buttons */}
-            <div className="flex items-center gap-1 sketchy-container p-1">
-               <button onClick={() => setTool('brush')} disabled={!isDrawer || gameState !== 'drawing'} className={`sketchy-btn !p-2 ${tool === 'brush' ? 'bg-primary text-white' : ''}`} title="Brush">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+            {/* Controls Row */}
+            <div className="flex items-center gap-4">
+              {/* Player List Toggle for Mobile */}
+              <button onClick={() => setIsPlayersVisible(!isPlayersVisible)} className="sketchy-btn lg:hidden !p-2">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.124-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.124-1.283.356-1.857m0 0a3.002 3.002 0 014.288 0M12 15a4 4 0 100-8 4 4 0 000 8z" /></svg>
               </button>
-              <button onClick={() => setTool('eraser')} disabled={!isDrawer || gameState !== 'drawing'} className={`sketchy-btn !p-2 ${tool === 'eraser' ? 'bg-primary text-white' : ''}`} title="Eraser">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 01-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z" /></svg>
-              </button>
-               <button onClick={() => setTool('fill')} disabled={!isDrawer || gameState !== 'drawing'} className={`sketchy-btn !p-2 ${tool === 'fill' ? 'bg-primary text-white' : ''}`} title="Flood Fill">
-                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3a1 1 0 00-1 1v3.586l-3.293-3.293a1 1 0 10-1.414 1.414L10.586 9H7a1 1 0 00-1 1c0 4.418 3.582 8 8 8s8-3.582 8-8a1 1 0 00-1-1h-3.586l4.293-4.293a1 1 0 10-1.414-1.414L13 7.586V4a1 1 0 00-1-1z" /></svg>
-              </button>
-            </div>
 
-            {/* Brush Size Slider */}
-            <div className="flex items-center gap-2">
-              <input type="range" min="1" max="50" value={brushSize} onChange={(e) => setBrushSize(parseInt(e.target.value))} disabled={!isDrawer || gameState !== 'drawing'} className="w-32 accent-primary disabled:opacity-30" />
-              <span className="font-bold w-10 text-center">{brushSize}</span>
-            </div>
-            
-            {/* Undo/Clear Buttons */}
-            <div className="flex items-center gap-1 sketchy-container p-1">
-                <button onClick={() => socketRef.current?.emit('undo', roomId)} disabled={!isDrawer || gameState !== 'drawing' || drawingHistory.length === 0} className="sketchy-btn !p-2" title="Undo">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l4-4m-4 4l4 4" /></svg>
+              {/* Tool Buttons */}
+              <div className="flex items-center gap-1 sketchy-container p-1">
+                 <button onClick={() => setTool('brush')} disabled={!isDrawer || gameState !== 'drawing'} className={`sketchy-btn !p-2 ${tool === 'brush' ? 'bg-primary text-white' : ''}`} title="Brush">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                 </button>
-                <button onClick={() => socketRef.current?.emit('clear_canvas', roomId)} disabled={!isDrawer || gameState !== 'drawing'} className="sketchy-btn !p-2" title="Clear Canvas">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                <button onClick={() => setTool('eraser')} disabled={!isDrawer || gameState !== 'drawing'} className={`sketchy-btn !p-2 ${tool === 'eraser' ? 'bg-primary text-white' : ''}`} title="Eraser">
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 01-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z" /></svg>
                 </button>
+                 <button onClick={() => setTool('fill')} disabled={!isDrawer || gameState !== 'drawing'} className={`sketchy-btn !p-2 ${tool === 'fill' ? 'bg-primary text-white' : ''}`} title="Flood Fill">
+                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3a1 1 0 00-1 1v3.586l-3.293-3.293a1 1 0 10-1.414 1.414L10.586 9H7a1 1 0 00-1 1c0 4.418 3.582 8 8 8s8-3.582 8-8a1 1 0 00-1-1h-3.586l4.293-4.293a1 1 0 10-1.414-1.414L13 7.586V4a1 1 0 00-1-1z" /></svg>
+                </button>
+              </div>
+
+              {/* Brush Size Slider */}
+              <div className="flex items-center gap-2">
+                <input type="range" min="1" max="50" value={brushSize} onChange={(e) => setBrushSize(parseInt(e.target.value))} disabled={!isDrawer || gameState !== 'drawing'} className="w-32 accent-primary disabled:opacity-30" />
+                <span className="font-bold w-10 text-center">{brushSize}</span>
+              </div>
+              
+              {/* Undo/Clear Buttons */}
+              <div className="flex items-center gap-1 sketchy-container p-1">
+                  <button onClick={() => socketRef.current?.emit('undo', roomId)} disabled={!isDrawer || gameState !== 'drawing' || drawingHistory.length === 0} className="sketchy-btn !p-2" title="Undo">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l4-4m-4 4l4 4" /></svg>
+                  </button>
+                  <button onClick={() => socketRef.current?.emit('clear_canvas', roomId)} disabled={!isDrawer || gameState !== 'drawing'} className="sketchy-btn !p-2" title="Clear Canvas">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
+              </div>
             </div>
           </div>
         </div>
