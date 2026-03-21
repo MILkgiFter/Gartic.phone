@@ -252,6 +252,14 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('undo', (roomId) => {
+    const room = rooms.get(roomId);
+    if (room && room.drawingHistory.length > 0) {
+      room.drawingHistory.pop();
+      io.to(roomId).emit('history_update', room.drawingHistory);
+    }
+  });
+
   socket.on('clear_canvas', (roomId) => {
     const room = rooms.get(roomId);
     if (room) {
