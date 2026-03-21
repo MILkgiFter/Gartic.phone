@@ -85,3 +85,7 @@ body {
     padding: 1rem 1.5rem;
     box-shadow: 3px 3px 0px 0px var(--foreground);
 }
+
+.dot-cursor {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black"><circle cx="8" cy="8" r="2"/></svg>') 8 8, auto !important;
+}

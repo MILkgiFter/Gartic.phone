@@ -44,23 +44,16 @@ export default function DrawingBoard({
       }
     };
 
-    const handleHistoryUpdate = (newHistory: any[]) => {
-      historyRef.current = newHistory;
-      redrawCanvas();
-    };
-
     const handleClearCanvas = () => {
       historyRef.current = [];
       redrawCanvas();
     };
 
     socket.on('draw_receive', handleDrawReceive);
-    socket.on('history_update', handleHistoryUpdate);
     socket.on('clear_canvas_receive', handleClearCanvas);
 
     return () => {
       socket.off('draw_receive', handleDrawReceive);
-      socket.off('history_update', handleHistoryUpdate);
       socket.off('clear_canvas_receive', handleClearCanvas);
     };
   }, [socket]);
@@ -213,7 +206,7 @@ export default function DrawingBoard({
         onTouchStart={startDrawing}
         onTouchMove={draw}
         onTouchEnd={stopDrawing}
-        className="block cursor-crosshair"
+        className={`block ${isDrawingMode ? 'dot-cursor' : 'cursor-default'}`}
       />
     </div>
   );
