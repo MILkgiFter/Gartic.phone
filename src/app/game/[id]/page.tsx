@@ -138,20 +138,6 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
 
   const isDrawer = socketRef.current?.id === currentDrawerId;
 
-  const getCursorStyle = () => {
-    if (isDrawer && gameState === 'drawing' && (tool === 'brush' || tool === 'eraser')) {
-      const size = Math.max(2, brushSize);
-      const cursorSvg = `<svg height="${size}" width="${size}" xmlns="http://www.w3.org/2000/svg"><circle r="${size / 2 - 1}" cy="${size / 2}" cx="${size / 2}" stroke="black" stroke-width="1" fill="${tool === 'eraser' ? 'white' : 'transparent'}" /></svg>`;
-      return {
-        cursor: `url('data:image/svg+xml;utf8,${encodeURIComponent(cursorSvg)}') ${size / 2} ${size / 2}, auto`
-      };
-    }
-    if (isDrawer && gameState === 'drawing') {
-      return { cursor: 'crosshair' };
-    }
-    return { cursor: 'default' };
-  };
-
   const colors = [
     '#000000', '#ffffff', '#7f7f7f', '#c3c3c3', '#880015', '#ed1c24', '#ff7f27', '#fff200', '#22b14c', '#00a2e8', 
     '#3f48cc', '#a349a4', '#b97a57', '#ffaec9', '#ffc90e', '#efe4b0', '#b5e61d', '#99d9ea', '#7092be', '#c8bfe7',
@@ -277,7 +263,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
 
 
         {/* Drawing Board */}
-        <div className="flex-1 min-h-0 sketchy-container" style={getCursorStyle()}>
+        <div className="flex-1 min-h-0 sketchy-container">
           {socketRef.current && (
             <DrawingBoard color={color} brushSize={brushSize} roomId={roomId} socket={socketRef.current} isDrawingMode={isDrawer && gameState === 'drawing'} tool={tool} history={drawingHistory} />
           )}

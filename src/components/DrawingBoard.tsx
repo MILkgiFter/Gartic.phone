@@ -36,20 +36,22 @@ export default function DrawingBoard({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    if (!isDrawingMode) {
-      canvas.style.cursor = 'default';
+    if (!isDrawingMode || (tool !== 'brush' && tool !== 'eraser')) {
+      if (tool === 'fill') {
+        canvas.style.cursor = 'crosshair'; // Or a specific fill cursor
+      } else {
+        canvas.style.cursor = 'default';
+      }
       return;
     }
     
-    const size = Math.max(2, brushSize); // Ensure cursor is visible
-    const stroke = tool === 'eraser' ? 'black' : (size < 3 ? 'black' : 'none');
-    const svgColor = tool === 'eraser' ? 'white' : color;
-
-    const cursorSvg = `<svg height="${size}" width="${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="${svgColor}" stroke="${stroke}" stroke-width="1" /></svg>`;
+    const size = Math.max(4, brushSize);
+    // A circle with a border, semi-transparent fill for visibility on all backgrounds
+    const cursorSvg = `<svg height="${size}" width="${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${size/2}" cy="${size/2}" r="${size/2 - 1}" stroke="black" stroke-width="1" fill="${tool === 'eraser' ? 'white' : 'rgba(0,0,0,0.2)'}" /></svg>`;
     
     canvas.style.cursor = `url('data:image/svg+xml;utf8,${encodeURIComponent(cursorSvg)}') ${size / 2} ${size / 2}, auto`;
 
-  }, [brushSize, color, tool, isDrawingMode]);
+  }, [brushSize, tool, isDrawingMode]);
 
   const drawShape = (shape: any, ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     if (shape.type === 'path') {
@@ -79,7 +81,20 @@ export default function DrawingBoard({
 
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    historyRef.current.forEach(shape => drawShape(shape, ctx, canvas));
+    
+    history.forEach(shape => drawShape(shape, ctx, canvas));
+
+    // Draw the current path being drawn locally, so it doesn't flicker
+    if (currentPathRef.current.length > 1) {
+      const currentShape = {
+        type: 'path',
+        points: currentPathRef.current,
+        color: tool === 'eraser' ? '#ffffff' : color,
+        size: brushSize,
+        tool: tool,
+      };
+      drawShape(currentShape, ctx, canvas);
+    }
   };
 
   useEffect(() => {
