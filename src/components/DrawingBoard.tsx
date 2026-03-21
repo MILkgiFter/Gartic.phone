@@ -25,38 +25,31 @@ export default function DrawingBoard({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const currentPathRef = useRef<Array<{x: number, y: number}>>([]);
-  const historyRef = useRef(history);
 
+  // Redraw canvas whenever history prop changes from the server
   useEffect(() => {
-    historyRef.current = history;
     redrawCanvas();
   }, [history]);
 
+  // Update cursor style to be dynamic based on brush size and color
   useEffect(() => {
-    if (!socket) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    const handleDrawReceive = (shape: any) => {
-      const canvas = canvasRef.current;
-      const ctx = canvas?.getContext('2d');
-      if (ctx && canvas) {
-        drawShape(shape, ctx, canvas);
-        historyRef.current.push(shape);
-      }
-    };
+    if (!isDrawingMode) {
+      canvas.style.cursor = 'default';
+      return;
+    }
+    
+    const size = Math.max(2, brushSize); // Ensure cursor is visible
+    const stroke = tool === 'eraser' ? 'black' : (size < 3 ? 'black' : 'none');
+    const svgColor = tool === 'eraser' ? 'white' : color;
 
-    const handleClearCanvas = () => {
-      historyRef.current = [];
-      redrawCanvas();
-    };
+    const cursorSvg = `<svg height="${size}" width="${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="${svgColor}" stroke="${stroke}" stroke-width="1" /></svg>`;
+    
+    canvas.style.cursor = `url('data:image/svg+xml;utf8,${encodeURIComponent(cursorSvg)}') ${size / 2} ${size / 2}, auto`;
 
-    socket.on('draw_receive', handleDrawReceive);
-    socket.on('clear_canvas_receive', handleClearCanvas);
-
-    return () => {
-      socket.off('draw_receive', handleDrawReceive);
-      socket.off('clear_canvas_receive', handleClearCanvas);
-    };
-  }, [socket]);
+  }, [brushSize, color, tool, isDrawingMode]);
 
   const drawShape = (shape: any, ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     if (shape.type === 'path') {
