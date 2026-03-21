@@ -3,6 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, use, useEffect, useRef } from 'react';
 import DrawingBoard from '@/components/DrawingBoard';
+import TimerClock from '@/components/TimerClock'; // Import the new component
 import { io, Socket } from 'socket.io-client';
 import { translations } from '@/lib/translations';
 
@@ -46,6 +47,8 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
   const [drawingHistory, setDrawingHistory] = useState<any[]>([]);
   const isSpectator = players.find(p => p.id === socketRef.current?.id)?.isSpectator || false;
 
+  const [wordSelectionTime, setWordSelectionTime] = useState(0);
+
   useEffect(() => {
     const userId = localStorage.getItem('gartic_userId');
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL!;
@@ -73,6 +76,9 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
       setGameState(data.gameState);
       setCurrentDrawerId(data.drawerId);
       setWordOptions([]);
+      if(data.wordSelectionTime) {
+        setWordSelectionTime(data.wordSelectionTime);
+      }
     });
 
     socket.on('word_options', (options: string[]) => {
@@ -163,7 +169,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
           <div className="sketchy-container flex flex-col items-center gap-6 max-w-sm w-full">
             <div className="flex flex-col items-center">
               <h2 className="text-4xl font-black tracking-tight text-center uppercase">{t.chooseWord}</h2>
-              <span className="text-primary font-bold text-3xl">{timer}s</span>
+              <TimerClock timeLeft={timer} totalTime={wordSelectionTime} size={80} />
             </div>
             <div className="flex flex-col gap-3 w-full">
               {wordOptions.map((word) => (
@@ -196,7 +202,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
         <div className="absolute inset-0 z-40 bg-black/10 flex items-center justify-center">
           <div className="sketchy-popup flex items-center gap-3 uppercase">
             <span>{t.drawerChoosing}</span>
-            <span className="text-primary text-2xl">{timer}s</span>
+            <TimerClock timeLeft={timer} totalTime={wordSelectionTime} size={40} />
           </div>
         </div>
       )}
@@ -267,8 +273,13 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
       </aside>
 
       {/* Center: Main drawing area and tools */}
-      <main className="flex-1 flex flex-col gap-2 md:gap-4 p-2 md:p-4 min-h-0">
+      <main className="flex-1 flex flex-col gap-2 md:gap-4 p-2 md:p-4 min-h-0 relative">
 
+        {gameState === 'drawing' && drawTime && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10">
+            <TimerClock timeLeft={timer} totalTime={drawTime} size={50} />
+          </div>
+        )}
 
         {isSpectator && (
           <div className="absolute bottom-4 right-4 bg-yellow-500 text-white font-bold py-2 px-4 rounded-full shadow-lg z-50">
