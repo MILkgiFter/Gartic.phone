@@ -70,6 +70,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script>window.yaContextCb=window.yaContextCb||[]</script>
+        <script src="https://yandex.ru/ads/system/context.js" async></script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${kalam.variable} antialiased`}

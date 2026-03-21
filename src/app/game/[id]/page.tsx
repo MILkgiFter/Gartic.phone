@@ -248,6 +248,22 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
               {t.exit}
             </button>
         </div>
+        <div className="p-4">
+          {/* Yandex.RTB R-A-18971199-1 */}
+          <div id="yandex_rtb_R-A-18971199-1"></div>
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                window.yaContextCb.push(() => {
+                  Ya.Context.AdvManager.render({
+                    "blockId": "R-A-18971199-1",
+                    "renderTo": "yandex_rtb_R-A-18971199-1"
+                  })
+                })
+              `,
+            }}
+          />
+        </div>
       </aside>
 
       {/* Center: Main drawing area and tools */}
