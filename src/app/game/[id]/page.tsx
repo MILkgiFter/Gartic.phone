@@ -6,6 +6,7 @@ import DrawingBoard from '@/components/DrawingBoard';
 import TimerClock from '@/components/TimerClock'; // Import the new component
 import { io, Socket } from 'socket.io-client';
 import { translations } from '@/lib/translations';
+import useSound from '@/hooks/useSound'; // Import the sound hook
 
 interface Player {
   id: string;
@@ -27,6 +28,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
   const drawTime = searchParams.get('drawTime') ? parseInt(searchParams.get('drawTime')!) : null;
   
   const t = translations[language] || translations.English;
+  const { playSound, toggleMute, isMuted } = useSound();
 
   const [color, setColor] = useState('#000000');
   const [brushSize, setBrushSize] = useState(5);
@@ -46,6 +48,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
   const [isChatVisible, setIsChatVisible] = useState(false);
   const [drawingHistory, setDrawingHistory] = useState<any[]>([]);
   const isSpectator = players.find(p => p.id === socketRef.current?.id)?.isSpectator || false;
+  const prevPlayerCountRef = useRef(players.length);
 
   const [wordSelectionTime, setWordSelectionTime] = useState(0);
 
@@ -61,14 +64,24 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
     });
 
     socket.on('message', (msg: any) => {
+      if (msg.isCorrect) {
+        playSound('guess');
+      }
       setMessages((prev) => [...prev, msg]);
     });
 
     socket.on('update_players', (updatedPlayers: Player[]) => {
+      if (prevPlayerCountRef.current < updatedPlayers.length) {
+        playSound('join');
+      } else if (prevPlayerCountRef.current > updatedPlayers.length) {
+        playSound('leave');
+      }
+      prevPlayerCountRef.current = updatedPlayers.length;
       setPlayers(updatedPlayers);
     });
 
     socket.on('round_start', (data: any) => {
+      playSound('round');
       if (socketRef.current?.id === data.drawerId) { // Only the new drawer clears the canvas for everyone
         socketRef.current?.emit('clear_canvas', roomId);
       }
@@ -90,14 +103,21 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
     });
 
     socket.on('timer_update', (timeLeft: number) => {
+      if (timeLeft > 0 && timeLeft <= 5 && timeLeft < timer) { // also check if timer is decreasing
+        playSound('time');
+      }
       setTimer(timeLeft);
     });
 
     socket.on('game_over', (data: { winner: string }) => {
+      playSound('win');
       setWinner(data.winner);
       setGameState('waiting');
-      // Clear winner after 5 seconds
-      setTimeout(() => setWinner(null), 5000);
+      // Clear winner after 5 seconds and reset word selection time
+      setTimeout(() => {
+        setWinner(null);
+        setWordSelectionTime(0);
+      }, 5000);
     });
 
     socket.on('history_update', (history) => {
@@ -317,6 +337,15 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
               {/* Player List Toggle for Mobile */}
               <button onClick={() => setIsPlayersVisible(!isPlayersVisible)} className="sketchy-btn lg:hidden !p-2">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.124-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.124-1.283.356-1.857m0 0a3.002 3.002 0 014.288 0M12 15a4 4 0 100-8 4 4 0 000 8z" /></svg>
+              </button>
+
+              {/* Mute Button */}
+              <button onClick={toggleMute} className="sketchy-btn !p-2">
+                {isMuted ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15.586a2 2 0 002.828 0L12 12m0 0l3.586-3.586a2 2 0 10-2.828-2.828L9.172 9.172m4.242 4.242a2 2 0 010 2.828l-1.414 1.414a2 2 0 01-2.828 0L6 18.828m12-12a2 2 0 00-2.828 0l-1.414 1.414a2 2 0 000 2.828l4.242 4.242 1.414-1.414a2 2 0 000-2.828l-1.414-1.414z" /></svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.586a2 2 0 002.828 0L12 12m0 0l3.586-3.586a2 2 0 10-2.828-2.828L9.172 9.172" /></svg>
+                )}
               </button>
 
               {/* Tool Buttons */}
