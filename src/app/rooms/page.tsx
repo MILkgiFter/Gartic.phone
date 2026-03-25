@@ -184,7 +184,7 @@ export default function RoomsPage() {
                     </div>
                     <button 
                       onClick={() => handleJoinRoom(room.id)}
-                      className="w-full bg-secondary hover:bg-secondary-hover text-white font-bold py-2 rounded-lg text-sm transition-colors uppercase mt-2"
+                      className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-2 rounded-lg text-sm transition-colors uppercase mt-2"
                     >
                       {t.joinRoom}
                     </button>
