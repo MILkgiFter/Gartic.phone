@@ -298,16 +298,18 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
 
       {/* Center: Main drawing area and tools */}
       <main className="flex-1 flex flex-col gap-2 md:gap-4 p-2 md:p-4 min-h-0 relative">
-
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
-          {gameState === 'drawing' && drawTime && (
-            <TimerClock timeLeft={timer} totalTime={drawTime} size={50} />
-          )}
-          {gameState === 'drawing' && !isDrawer && wordLength > 0 && (
-            <div className="flex items-center justify-center gap-2 bg-white/80 backdrop-blur-sm p-2 rounded-lg sketchy-container">
-              {Array.from({ length: wordLength }).map((_, i) => (
-                <span key={i} className="w-6 h-8 md:w-8 md:h-10 bg-gray-200 rounded-md flex items-center justify-center text-2xl font-bold"></span>
-              ))}
+        {/* Top bar for timer and word hints */}
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 w-full px-4">
+          {gameState === 'drawing' && (
+            <div className="flex flex-col items-center gap-2 w-full">
+              {drawTime && <TimerClock timeLeft={timer} totalTime={drawTime} size={50} />}
+              {!isDrawer && wordLength > 0 && (
+                <div className="flex items-center justify-center gap-2 bg-white/80 backdrop-blur-sm p-2 rounded-lg sketchy-container">
+                  {Array.from({ length: wordLength }).map((_, i) => (
+                    <div key={i} className="w-6 h-8 md:w-8 md:h-10 border-b-4 border-black" />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
