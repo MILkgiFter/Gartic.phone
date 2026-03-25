@@ -51,6 +51,7 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
   const prevPlayerCountRef = useRef(players.length);
 
   const [wordSelectionTime, setWordSelectionTime] = useState(0);
+  const [wordLength, setWordLength] = useState(0);
 
   useEffect(() => {
     const userId = localStorage.getItem('gartic_userId');
@@ -100,10 +101,13 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
 
     socket.on('game_state_update', (data: any) => {
       setGameState(data.gameState);
+      if (data.wordLength) {
+        setWordLength(data.wordLength);
+      }
     });
 
     socket.on('timer_update', (timeLeft: number) => {
-      if (timeLeft > 0 && timeLeft <= 5 && timeLeft < timer) { // also check if timer is decreasing
+      if (timeLeft > 0 && timeLeft <= 10 && timeLeft < timer) { // also check if timer is decreasing
         playSound('time');
       }
       setTimer(timeLeft);
@@ -295,11 +299,18 @@ export default function GameRoom({ params }: { params: Promise<{ id: string }> }
       {/* Center: Main drawing area and tools */}
       <main className="flex-1 flex flex-col gap-2 md:gap-4 p-2 md:p-4 min-h-0 relative">
 
-        {gameState === 'drawing' && drawTime && (
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+          {gameState === 'drawing' && drawTime && (
             <TimerClock timeLeft={timer} totalTime={drawTime} size={50} />
-          </div>
-        )}
+          )}
+          {gameState === 'drawing' && !isDrawer && wordLength > 0 && (
+            <div className="flex items-center justify-center gap-2 bg-white/80 backdrop-blur-sm p-2 rounded-lg sketchy-container">
+              {Array.from({ length: wordLength }).map((_, i) => (
+                <span key={i} className="w-6 h-8 md:w-8 md:h-10 bg-gray-200 rounded-md flex items-center justify-center text-2xl font-bold"></span>
+              ))}
+            </div>
+          )}
+        </div>
 
         {isSpectator && (
           <div className="absolute bottom-4 right-4 bg-yellow-500 text-white font-bold py-2 px-4 rounded-full shadow-lg z-50">

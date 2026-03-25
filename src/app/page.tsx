@@ -66,7 +66,7 @@ export default function Home() {
           <div className="text-primary text-6xl font-black italic tracking-tighter">
             Gartic<span className="text-foreground">.phone</span>
           </div>
-          <p className="text-sm font-medium opacity-70">Draw, Guess, WIN</p>
+          
         </div>
       </header>
 
@@ -149,8 +149,7 @@ export default function Home() {
 
       <footer className="mt-12 pb-8 text-xs font-bold opacity-30 flex gap-4">
         {/* <Link href="#">DOWNLOAD</Link> */}
-        <Link href="/terms">SERVICE</Link>
-        <Link href="/privacy">PRIVACY</Link>
+
         {/* <Link href="#">CONTACT</Link> */}
       </footer>
     </div>
