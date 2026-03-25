@@ -63,7 +63,7 @@ export default function Home() {
       {/* Header with logo */}
       <header className="mt-12 mb-8">
         <div className="flex flex-col items-center gap-2">
-          <div className="text-primary text-6xl font-black italic tracking-tighter">
+          <div className="text-primary text-5xl md:text-6xl font-black italic tracking-tighter">
             Gartic<span className="text-foreground">.phone</span>
           </div>
           
