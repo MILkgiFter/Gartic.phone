@@ -1,3 +1,4 @@
+
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -29,7 +30,7 @@ app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || '*', // We'll set this to the Vercel URL later
+    origin: process.env.CLIENT_URL || '*',
     methods: ['GET', 'POST'],
   },
 });
@@ -61,7 +62,7 @@ function startTimer(roomId, type) {
 
   room.timeLeft = type === 'selecting' ? SELECT_TIME : (room.settings?.drawTime || DRAW_TIME);
   
-  io.to(roomId).emit('timer_update', room.timeLeft);
+io.to(roomId).emit('timer_update', room.timeLeft);
 
   room.timer = setInterval(() => {
     room.timeLeft--;
@@ -96,7 +97,8 @@ function handleSelectWord(roomId, socketId, word) {
   
   io.to(roomId).emit('game_state_update', {
       gameState: 'drawing',
-      drawerNickname: drawer.nickname
+      drawerNickname: drawer.nickname,
+      wordLength: word.length
     });
 
     const t = translations[room.language || 'English'];
@@ -110,10 +112,8 @@ function startNewRound(roomId) {
 
   stopTimer(room);
 
-  // Clear canvas for everyone
   io.to(roomId).emit('clear_canvas_receive');
 
-  // Check for winners before starting a new round
   if (room.settings?.pointsLimit) {
     const winner = room.players.find(p => p.points >= room.settings.pointsLimit);
     if (winner) {
@@ -125,20 +125,16 @@ function startNewRound(roomId) {
     }
   }
 
-    // All players are now active for the new round
   room.players.forEach(p => p.isSpectator = false);
 
-  // Filter for active players for the new round
   const activePlayers = room.players.filter(p => !p.disconnected);
   if (activePlayers.length < 2 && room.players.length >= 2) {
-      // Not enough active players to continue, wait for more
       room.gameState = 'waiting';
       io.to(roomId).emit('game_state_update', { gameState: 'waiting' });
       return;
   }
-  if (activePlayers.length < 1) return; // or < 2 depending on rules
+  if (activePlayers.length < 1) return;
 
-  // Reset round state
   room.currentDrawerIndex = (room.currentDrawerIndex + 1) % activePlayers.length;
   room.currentWord = '';
   room.guessedPlayers = new Set();
@@ -163,7 +159,7 @@ io.on('connection', (socket) => {
   socket.on('get_rooms', () => {
     const activeRooms = Array.from(rooms.entries()).map(([id, room]) => ({
       id,
-      players: room.players.length, // Only send count to lobby
+      players: room.players.length,
       language: room.language,
       settings: room.settings
     }));
@@ -182,7 +178,7 @@ io.on('connection', (socket) => {
         gameState: 'waiting',
         timer: null,
         timeLeft: 0,
-        drawingHistory: [], // Add this line
+        drawingHistory: [],
         language: language || 'English',
         settings: settings || { pointsLimit: 500, drawTime: 60 }
       });
@@ -190,32 +186,35 @@ io.on('connection', (socket) => {
     
     const room = rooms.get(roomId);
     
-    // Check if player with same userId is already in room (reconnection)
     const existingPlayer = room.players.find(p => p.userId === userId);
     
     if (existingPlayer) {
-      // Update socket ID and mark as active
       existingPlayer.id = socket.id;
-      existingPlayer.nickname = nickname; // In case they changed it
+      existingPlayer.nickname = nickname; 
       existingPlayer.disconnected = false;
-      existingPlayer.isSpectator = room.gameState !== 'waiting'; // Re-check spectator status on rejoin
+      existingPlayer.isSpectator = room.gameState !== 'waiting';
       
       const t = translations[room.language || 'English'];
       io.to(roomId).emit('message', { user: 'System', text: `${nickname} ${t.joinedRoom}` });
       io.to(roomId).emit('update_players', room.players);
 
-      // Restore current game state for reconnected player
       socket.emit('round_start', {
         drawerId: room.players[room.currentDrawerIndex]?.id,
         drawerNickname: room.players[room.currentDrawerIndex]?.nickname,
         gameState: room.gameState
       });
       
-      socket.emit('canvas_state_receive', room.drawingHistory);
+      socket.emit('history_update', room.drawingHistory);
       socket.emit('timer_update', room.timeLeft);
       
       if (room.gameState === 'selecting_word' && socket.id === room.players[room.currentDrawerIndex]?.id) {
         socket.emit('word_options', getRandomWords(roomId, 2));
+      }
+      if (room.gameState === 'drawing') {
+          socket.emit('game_state_update', { 
+              gameState: 'drawing', 
+              wordLength: room.currentWord.length 
+            });
       }
       
     } else {
@@ -289,7 +288,6 @@ io.on('connection', (socket) => {
       const points = Math.max(10, 50 - (room.guessedPlayers.size - 1) * 10);
       player.points += points;
       
-      // Drawer gets points based on number of players in room
       const pointsForDrawer = room.players.length * 5;
       drawer.points += pointsForDrawer;
 
@@ -301,7 +299,7 @@ io.on('connection', (socket) => {
         isCorrect: true 
       });
 
-      if (room.guessedPlayers.size === room.players.length - 1) {
+      if (room.guessedPlayers.size === room.players.filter(p => !p.isSpectator).length - 1) {
         io.to(roomId).emit('message', { user: 'System', text: `${t.everyoneGuessed} ${room.currentWord}` });
         startNewRound(roomId);
       }
@@ -319,16 +317,13 @@ io.on('connection', (socket) => {
         const t = translations[room.language || 'English'];
         io.to(roomId).emit('message', { user: 'System', text: `${player.nickname} ${t.leftRoom}` });
         
-        // Instantly remove player and update game state
         room.players.splice(playerIndex, 1);
         
         if (room.players.length === 0) {
-          // If the room is empty, delete it.
           stopTimer(room);
           rooms.delete(roomId);
           console.log(`Room ${roomId} deleted as it was empty.`);
         } else {
-          // If room is not empty, update clients and check game state
           io.to(roomId).emit('update_players', room.players);
           
           if (room.players.length < 2 && room.gameState !== 'waiting') {
@@ -336,16 +331,14 @@ io.on('connection', (socket) => {
             room.gameState = 'waiting';
             io.to(roomId).emit('game_state_update', { gameState: 'waiting' });
           } else if (playerIndex === room.currentDrawerIndex) {
-            // If the drawer left, start a new round.
-            room.currentDrawerIndex--; // Adjust index for the next round calculation.
+            room.currentDrawerIndex--;
             startNewRound(roomId);
           } else if (playerIndex < room.currentDrawerIndex) {
-            // If a player before the drawer left, the drawer's index shifts.
             room.currentDrawerIndex--;
           }
         }
 
-        break; // Player found and handled, exit loop.
+        break;
       }
     }
   });
@@ -355,4 +348,3 @@ const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`Socket server running on port ${PORT}`);
 });
-
